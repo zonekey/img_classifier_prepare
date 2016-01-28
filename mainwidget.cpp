@@ -10,9 +10,7 @@
 #include <QPushButton>
 #include <QPainter>
 #ifdef WIN32
-#   include <direct.h>
-#else
-#   include <sys/stat.h>
+#   define snprintf _snprintf
 #endif
 
 
@@ -202,6 +200,6 @@ void MainWidget::undo()
 void MainWidget::show_info()
 {
     char buf[128];
-    _snprintf(buf, sizeof(buf), "类别: %u, 剩余: %u", catalogs_.size(), img_fnames_.size());
+    snprintf(buf, sizeof(buf), "类别: %u, 剩余: %u", catalogs_.size(), img_fnames_.size());
     setWindowTitle(buf);
 }
