@@ -67,7 +67,7 @@ private:
             fs += '/';
             fs += catalog;
             fs += '/';
-            fs += fname.right(pos);
+            fs += fname.right(fname.length() - pos - 1);
             return fs;
         }
         else {
@@ -78,11 +78,12 @@ private:
 
     QString origin_fname(const QString &cataloged_fname)
     {
-        int pos = cataloged_fname.lastIndexOf('/');
+        int pos = cataloged_fname.lastIndexOf("/");
         if (pos > 0) {
             QString fs = IMG_PATH;
             fs += '/';
-            fs += cataloged_fname.right(pos);
+            QString n = cataloged_fname.right(cataloged_fname.length() - pos - 1);
+            fs += n;
             return fs;
         }
         else {
