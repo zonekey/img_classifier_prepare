@@ -10,9 +10,7 @@
 #include <QPushButton>
 #include <QPainter>
 #ifdef WIN32
-#   include <direct.h>
-#else
-#   include <sys/stat.h>
+#   define snprintf _snprintf
 #endif
 
 
