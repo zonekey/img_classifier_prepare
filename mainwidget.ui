@@ -23,13 +23,24 @@
       <widget class="QWidget" name="widget_2" native="true">
        <property name="maximumSize">
         <size>
-         <width>150</width>
+         <width>300</width>
          <height>16777215</height>
         </size>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_buttons"/>
+         <layout class="QVBoxLayout" name="verticalLayout_x">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_x">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_buttons"/>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_buttons2"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QPushButton" name="button_undo">

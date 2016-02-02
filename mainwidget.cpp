@@ -23,16 +23,26 @@ MainWidget::MainWidget(QWidget *parent) :
     ui->setupUi(this);
 
     load_image_fnames();
-    load_catalogs();
 
     QObject::connect(ui->button_undo, SIGNAL(clicked(void)), this, SLOT(undo()));
 
-    // 根据类别，加载按钮.
+    catalogs_ = load_catalogs("./cfg.d/catalogs.txt");
     for (size_t i = 0; i < catalogs_.size(); i++) {
-        QString title(catalogs_[i]);
+        QString title(catalogs_[i].first), note(catalogs_[i].second);
         QPushButton *but = new QPushButton(title);
+        but->setToolTip(note);
         ui->verticalLayout_buttons->addWidget(but);
         buttons_.push_back(but);
+        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_clicked(void)));
+    }
+
+    catalogs2_ = load_catalogs("./cfg.d/catalogs2.txt");
+    for (size_t i = 0; i < catalogs2_.size(); i++) {
+        QString title(catalogs2_[i].first), note(catalogs2_[i].second);
+        QPushButton *but = new QPushButton(title);
+        but->setToolTip(note);
+        ui->verticalLayout_buttons2->addWidget(but);
+        buttons2_.push_back(but);
 
         QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_clicked(void)));
     }
@@ -72,9 +82,11 @@ void MainWidget::disable_buttons()
     ui->button_undo->setEnabled(!undo_list_.empty());
 }
 
-void MainWidget::load_catalogs()
+std::vector<std::pair<QString, QString>> MainWidget::load_catalogs(const char *fname)
 {
-    QFile file(CATALOG_FNAME);
+    std::vector<std::pair<QString, QString>> catalogs;
+
+    QFile file(fname);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream ts(&file);
         QDir curr_dir("./");
@@ -82,12 +94,20 @@ void MainWidget::load_catalogs()
         while (!ts.atEnd()) {
             QString line = ts.readLine().simplified();
             if (line.count() > 2) {
-                catalogs_.push_back(line);
+                QString catalog = line;
+                QString note;
+                int pos = line.indexOf(':');    // 后面作为注释 ...
+                if (pos > 0) {
+                    catalog = line.left(pos);
+                    note = line.right(line.length() - pos);
+                }
+
+                catalogs.push_back(std::pair<QString, QString>(catalog, note));
 
                 // 创建子目录.
                 QString fname = IMG_PATH;
                 fname += '/';
-                fname += line;
+                fname += catalog;
 
                 curr_dir.mkdir(fname);
             }
@@ -96,8 +116,7 @@ void MainWidget::load_catalogs()
         file.close();
     }
 
-
-    fprintf(stderr, "load_catalogs: load %lu catalogs\n", catalogs_.size());
+    return catalogs;
 }
 
 void MainWidget::load_image_fnames()
@@ -202,6 +221,6 @@ void MainWidget::undo()
 void MainWidget::show_info()
 {
     char buf[128];
-    _snprintf(buf, sizeof(buf), "类别: %u, 剩余: %u", catalogs_.size(), img_fnames_.size());
+    _snprintf(buf, sizeof(buf), "类别: %u, 剩余: %u", catalogs_.size() + catalogs2_.size(), img_fnames_.size());
     setWindowTitle(buf);
 }

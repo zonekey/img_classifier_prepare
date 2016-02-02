@@ -40,11 +40,11 @@ private:
     std::stack<QString> undo_list_;
 
     /// 类别
-    std::vector<QString> catalogs_;
-    std::vector<QPushButton*> buttons_;
+    std::vector<std::pair<QString, QString>> catalogs_, catalogs2_;
+    std::vector<QPushButton*> buttons_, buttons2_;
 
     void load_image_fnames();
-    void load_catalogs();
+    std::vector<std::pair<QString, QString> > load_catalogs(const char *fname);
     virtual void paintEvent(QPaintEvent *pd);
 
     // 下一张照片，当前照片位于 img_fnames_.front()
