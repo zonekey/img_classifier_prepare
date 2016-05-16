@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1181</width>
-    <height>605</height>
+    <height>640</height>
    </rect>
   </property>
   <property name="font">
@@ -77,6 +77,13 @@
            </layout>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_skip">
+          <property name="text">
+           <string>跳过该图片</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="button_undo">

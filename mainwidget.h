@@ -32,6 +32,7 @@ private slots:
     void but_where_selected();
     void but_what_selected();
     void undo();
+    void but_skipped();
 
 private:
     Ui::MainWidget *ui;
