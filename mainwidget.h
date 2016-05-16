@@ -46,7 +46,7 @@ private:
     std::stack<QString> undo_list_;
 
     /// 类别
-    std::vector<std::pair<QString, QString>> catalogs_, catalogs2_;
+    std::vector<std::pair<QString, QString> > catalogs_, catalogs2_;
     std::vector<QRadioButton*> but_wheres_, but_whats_, but_whos_;
 
     void load_image_fnames();
@@ -77,7 +77,7 @@ private:
     QString cataloged_fname(const QString &fname)
     {
         if (where_.isEmpty() || what_.isEmpty() || who_.isEmpty()) {
-            throw new std::exception("empty of where, what, who");
+            throw new std::exception();
         }
 
         int pos = fname.lastIndexOf('/');
@@ -94,7 +94,7 @@ private:
             return fs;
         }
         else {
-            throw new std::exception("cataloged_fname!");
+            throw new std::exception();
         }
     }
 

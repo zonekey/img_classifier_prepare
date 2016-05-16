@@ -27,7 +27,13 @@ MainWidget::MainWidget(QWidget *parent) :
 
     QObject::connect(ui->button_undo, SIGNAL(clicked(void)), this, SLOT(undo()));
 
-    catalogs_ = load_catalogs("./cfg.d/where.txt");
+#ifdef Q_OS_WIN32
+#   define WHERE "./cfg.d/where.txt"
+#else
+#   define WHERE "./cfg.d/where.utf8.txt"
+#endif
+
+    catalogs_ = load_catalogs(WHERE);
     for (size_t i = 0; i < catalogs_.size(); i++) {
         QString title(catalogs_[i].first), note(catalogs_[i].second);
         QRadioButton *but = new QRadioButton(title);
@@ -37,7 +43,13 @@ MainWidget::MainWidget(QWidget *parent) :
         QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_where_selected(void)));
     }
 
-    catalogs2_ = load_catalogs("./cfg.d/what.txt");
+#ifdef Q_OS_WIN32
+#   define WHAT "./cfg.d/what.txt"
+#else
+#   define WHAT "./cfg.d/what.utf8.txt"
+#endif
+
+    catalogs2_ = load_catalogs(WHAT);
     for (size_t i = 0; i < catalogs2_.size(); i++) {
         QString title(catalogs2_[i].first), note(catalogs2_[i].second);
         QRadioButton *but = new QRadioButton(title);
@@ -48,7 +60,13 @@ MainWidget::MainWidget(QWidget *parent) :
         QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_what_selected()));
     }
 
-    std::vector<std::pair<QString, QString> > catalogs3 = load_catalogs("./cfg.d/who.txt");
+#ifdef Q_OS_WIN32
+#   define WHO "./cfg.d/who.txt"
+#else
+#   define WHO "./cfg.d/who.utf8.txt"
+#endif
+
+    std::vector<std::pair<QString, QString> > catalogs3 = load_catalogs(WHO);
     for (size_t i = 0; i < catalogs3.size(); i++) {
         QString title(catalogs3[i].first), note(catalogs3[i].second);
         QRadioButton *but = new QRadioButton(title);
@@ -90,9 +108,9 @@ void MainWidget::paintEvent(QPaintEvent *pd)
     }
 }
 
-std::vector<std::pair<QString, QString>> MainWidget::load_catalogs(const char *fname)
+std::vector<std::pair<QString, QString> > MainWidget::load_catalogs(const char *fname)
 {
-    std::vector<std::pair<QString, QString>> catalogs;
+    std::vector<std::pair<QString, QString> > catalogs;
 
     QFile file(fname);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -128,7 +146,7 @@ void MainWidget::load_image_fnames()
 
     QStringList list = dir.entryList();
     QStringList::const_iterator it;
-    for (it = list.cbegin(); it != list.cend(); ++it) {
+    for (it = list.begin(); it != list.end(); ++it) {
         QString fname = IMG_PATH;
         fname += '/';
         fname += *it;
@@ -269,6 +287,6 @@ void MainWidget::undo()
 void MainWidget::show_info()
 {
     char buf[128];
-    _snprintf(buf, sizeof(buf), "剩余: %u", img_fnames_.size());
+    snprintf(buf, sizeof(buf), "剩余: %u", img_fnames_.size());
     setWindowTitle(buf);
 }
