@@ -61,7 +61,9 @@ private:
     {
         for (size_t i = 0; i < buts.size(); i++) {
             buts[i]->setEnabled(enable);
+            buts[i]->setAutoExclusive(false);
             buts[i]->setChecked(false);
+            buts[i]->setAutoExclusive(true);
         }
     }
 

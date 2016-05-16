@@ -63,6 +63,8 @@ MainWidget::MainWidget(QWidget *parent) :
     enable_buts(but_whats_, false);
     enable_buts(but_whos_, false);
 
+    ui->button_undo->setEnabled(false);
+
     QPixmap *img = next_image();
     if (img) {
         show_image(img);
@@ -175,6 +177,8 @@ void MainWidget::but_where_selected()
     QRadioButton *but = (QRadioButton*)sender();
     where_ = but->text();
     enable_buts(but_whats_, true);
+
+    ui->button_undo->setEnabled(false);
 }
 
 void MainWidget::but_what_selected()
@@ -182,6 +186,8 @@ void MainWidget::but_what_selected()
     QRadioButton *but = (QRadioButton*)sender();
     what_ = but->text();
     enable_buts(but_whos_, true);
+
+    ui->button_undo->setEnabled(false);
 }
 
 void MainWidget::but_who_selected()
@@ -212,8 +218,11 @@ void MainWidget::but_who_selected()
     show_curr();
     show_info();
 
+    enable_buts(but_wheres_, true);
     enable_buts(but_whats_, false);
     enable_buts(but_whos_, false);
+
+    ui->button_undo->setEnabled(true);
 }
 
 void MainWidget::undo()
@@ -236,6 +245,6 @@ void MainWidget::undo()
 void MainWidget::show_info()
 {
     char buf[128];
-    _snprintf(buf, sizeof(buf), "类别: %u, 剩余: %u", catalogs_.size() + catalogs2_.size(), img_fnames_.size());
+    _snprintf(buf, sizeof(buf), "剩余: %u", img_fnames_.size());
     setWindowTitle(buf);
 }
