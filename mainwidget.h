@@ -9,6 +9,7 @@
 #include <QPixmap>
 #include <sstream>
 #include <QPushButton>
+#include <QRadioButton>
 
 #define IMG_PATH "./image.d"
 #define CFG_PATH "./cfg.d"
@@ -27,11 +28,15 @@ public:
     ~MainWidget();
 
 private slots:
-    void but_clicked();
+    void but_who_selected();
+    void but_where_selected();
+    void but_what_selected();
     void undo();
 
 private:
     Ui::MainWidget *ui;
+
+    QString where_, what_, who_;    // 根据这三个构造子目录名字 ...
 
     /// 输入文件列表
     std::deque<QString> img_fnames_;
@@ -41,7 +46,7 @@ private:
 
     /// 类别
     std::vector<std::pair<QString, QString>> catalogs_, catalogs2_;
-    std::vector<QPushButton*> buttons_, buttons2_;
+    std::vector<QRadioButton*> but_wheres_, but_whats_, but_whos_;
 
     void load_image_fnames();
     std::vector<std::pair<QString, QString> > load_catalogs(const char *fname);
@@ -52,13 +57,44 @@ private:
 
     QPixmap curr_image_;    // 正在显示的图像 ...
 
+    void enable_buts(std::vector<QRadioButton*> buts, bool enable)
+    {
+        for (size_t i = 0; i < buts.size(); i++) {
+            buts[i]->setEnabled(enable);
+            buts[i]->setChecked(false);
+        }
+    }
+
     // 显示
     void show_image(const QPixmap *img);
     void show_curr();
     void show_info();
-    void disable_buttons();
 
     // 从原始名字转化为分类后的名字
+    QString cataloged_fname(const QString &fname)
+    {
+        if (where_.isEmpty() || what_.isEmpty() || who_.isEmpty()) {
+            throw new std::exception("empty of where, what, who");
+        }
+
+        int pos = fname.lastIndexOf('/');
+        if (pos > 0) {
+            QString fs = IMG_PATH;
+            fs += '/';
+            fs += where_;
+            fs += '-';
+            fs += what_;
+            fs += '-';
+            fs += who_;
+            fs += '/';
+            fs += fname.right(fname.length() - pos - 1);
+            return fs;
+        }
+        else {
+            throw new std::exception("cataloged_fname!");
+        }
+    }
+
     QString cataloged_fname(const QString &catalog, const QString &fname)
     {
         int pos = fname.lastIndexOf('/');

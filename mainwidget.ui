@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1202</width>
-    <height>721</height>
+    <width>1181</width>
+    <height>605</height>
    </rect>
   </property>
   <property name="font">
@@ -37,12 +37,42 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_x">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_x">
+           <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_buttons"/>
+             <widget class="QGroupBox" name="groupBox_where">
+              <property name="title">
+               <string>where</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_4">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_where"/>
+               </item>
+              </layout>
+             </widget>
             </item>
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_buttons2"/>
+             <widget class="QGroupBox" name="groupBox_what">
+              <property name="title">
+               <string>what</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_what"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_who">
+              <property name="title">
+               <string>who</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_who"/>
+               </item>
+              </layout>
+             </widget>
             </item>
            </layout>
           </item>

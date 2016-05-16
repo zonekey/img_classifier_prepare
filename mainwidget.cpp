@@ -8,11 +8,14 @@
 #include <QIODevice>
 #include <QTextStream>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QPainter>
+#include <algorithm>
+#include <assert.h>
+
 #ifdef WIN32
 #   define snprintf _snprintf
 #endif
-
 
 MainWidget::MainWidget(QWidget *parent) :
     QWidget(parent),
@@ -24,34 +27,47 @@ MainWidget::MainWidget(QWidget *parent) :
 
     QObject::connect(ui->button_undo, SIGNAL(clicked(void)), this, SLOT(undo()));
 
-    catalogs_ = load_catalogs("./cfg.d/catalogs.txt");
+    catalogs_ = load_catalogs("./cfg.d/where.txt");
     for (size_t i = 0; i < catalogs_.size(); i++) {
         QString title(catalogs_[i].first), note(catalogs_[i].second);
-        QPushButton *but = new QPushButton(title);
+        QRadioButton *but = new QRadioButton(title);
         but->setToolTip(note);
-        ui->verticalLayout_buttons->addWidget(but);
-        buttons_.push_back(but);
-        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_clicked(void)));
+        ui->verticalLayout_where->addWidget(but);
+        but_wheres_.push_back(but);
+        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_where_selected(void)));
     }
 
-    catalogs2_ = load_catalogs("./cfg.d/catalogs2.txt");
+    catalogs2_ = load_catalogs("./cfg.d/what.txt");
     for (size_t i = 0; i < catalogs2_.size(); i++) {
         QString title(catalogs2_[i].first), note(catalogs2_[i].second);
-        QPushButton *but = new QPushButton(title);
+        QRadioButton *but = new QRadioButton(title);
         but->setToolTip(note);
-        ui->verticalLayout_buttons2->addWidget(but);
-        buttons2_.push_back(but);
+        ui->verticalLayout_what->addWidget(but);
+        but_whats_.push_back(but);
 
-        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_clicked(void)));
+        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_what_selected()));
     }
+
+    std::vector<std::pair<QString, QString> > catalogs3 = load_catalogs("./cfg.d/who.txt");
+    for (size_t i = 0; i < catalogs3.size(); i++) {
+        QString title(catalogs3[i].first), note(catalogs3[i].second);
+        QRadioButton *but = new QRadioButton(title);
+        but->setToolTip(note);
+        ui->verticalLayout_who->addWidget(but);
+        but_whos_.push_back(but);
+
+        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_who_selected(void)));
+    }
+
+    enable_buts(but_wheres_, true);
+    enable_buts(but_whats_, false);
+    enable_buts(but_whos_, false);
 
     QPixmap *img = next_image();
     if (img) {
         show_image(img);
         delete img;
     }
-
-    disable_buttons();
 
     show_info();
 }
@@ -70,16 +86,6 @@ void MainWidget::paintEvent(QPaintEvent *pd)
     }
 }
 
-void MainWidget::disable_buttons()
-{
-    for (size_t i = 0; i < buttons_.size(); i++) {
-        QPushButton *but = buttons_[i];
-        but->setEnabled(!img_fnames_.empty());
-    }
-
-    ui->button_undo->setEnabled(!undo_list_.empty());
-}
-
 std::vector<std::pair<QString, QString>> MainWidget::load_catalogs(const char *fname)
 {
     std::vector<std::pair<QString, QString>> catalogs;
@@ -87,7 +93,6 @@ std::vector<std::pair<QString, QString>> MainWidget::load_catalogs(const char *f
     QFile file(fname);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream ts(&file);
-        QDir curr_dir("./");
 
         while (!ts.atEnd()) {
             QString line = ts.readLine().simplified();
@@ -101,13 +106,6 @@ std::vector<std::pair<QString, QString>> MainWidget::load_catalogs(const char *f
                 }
 
                 catalogs.push_back(std::pair<QString, QString>(catalog, note));
-
-                // 创建子目录.
-                QString fname = IMG_PATH;
-                fname += '/';
-                fname += catalog;
-
-                curr_dir.mkdir(fname);
             }
         }
 
@@ -133,6 +131,8 @@ void MainWidget::load_image_fnames()
 
         img_fnames_.push_back(fname);
     }
+
+    std::random_shuffle(img_fnames_.begin(), img_fnames_.end());
 
     fprintf(stderr, "%lu images fname loaded!\n", img_fnames_.size());
 }
@@ -170,31 +170,50 @@ void MainWidget::show_curr()
     }
 }
 
-void MainWidget::but_clicked()
+void MainWidget::but_where_selected()
+{
+    QRadioButton *but = (QRadioButton*)sender();
+    where_ = but->text();
+    enable_buts(but_whats_, true);
+}
+
+void MainWidget::but_what_selected()
+{
+    QRadioButton *but = (QRadioButton*)sender();
+    what_ = but->text();
+    enable_buts(but_whos_, true);
+}
+
+void MainWidget::but_who_selected()
 {
     if (img_fnames_.empty()) {
         return; // TODO: 应该禁用按钮 ...
     }
 
-    QPushButton *but = (QPushButton*)sender();
-    QString title = but->text();
-    QString catalog = title;
-    fprintf(stderr, "catalog: '%s' selected!\n", catalog.toLocal8Bit().constData());
+    QRadioButton *but = (QRadioButton*)sender();
+    who_ = but->text();
 
     /** 将当前文件移动到 catalog 对应的子目录中.
      *  从 img_fnames_.front() 删除，保存到 undo_list_ 中，用于支持undo
      */
     QString src_fname = img_fnames_.front();
-    QString dst_fname = cataloged_fname(catalog, src_fname);
+    QString dst_fname = cataloged_fname(src_fname);
+
+    // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
+    QDir curr(IMG_PATH);
+    QString subdirname = where_ + '-' + what_ + '-' + who_;
+    curr.mkdir(subdirname);
+
     QFile::rename(src_fname, dst_fname);
 
     undo_list_.push(dst_fname);
     img_fnames_.pop_front();
 
-    disable_buttons();
-
     show_curr();
     show_info();
+
+    enable_buts(but_whats_, false);
+    enable_buts(but_whos_, false);
 }
 
 void MainWidget::undo()
@@ -209,8 +228,6 @@ void MainWidget::undo()
 
     undo_list_.pop();
     img_fnames_.push_front(dst_fname);
-
-    disable_buttons();
 
     show_curr();
     show_info();
