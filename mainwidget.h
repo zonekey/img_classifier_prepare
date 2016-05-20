@@ -10,6 +10,7 @@
 #include <sstream>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QDir>
 
 #define IMG_PATH "./image.d"
 #define CFG_PATH "./cfg.d"
@@ -130,6 +131,8 @@ private:
             return "";
         }
     }
+
+    void all_selected();
 };
 
 #endif // MAINWIDGET_H
