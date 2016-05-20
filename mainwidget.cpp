@@ -227,9 +227,55 @@ void MainWidget::but_what_selected()
 {
     QRadioButton *but = (QRadioButton*)sender();
     what_ = but->text();
+
+    /** FIXME: 如果what_为“集体xxx”，则自动选择 who_ 为多人，然后下一张.
+     *         如果 what_ 为“无”，则自动选择 who_ 为“无人”，然后下一张 .
+     */
+    if (what_.indexOf("集体") == 0) {
+        who_ = "多人";
+        all_selected();
+        return;
+    }
+
+    if (what_.indexOf("无人") == 0) {
+        who_ = "无人";
+        all_selected();
+        return;
+    }
+
     enable_buts(but_whos_, true);
 
     ui->button_undo->setEnabled(false);
+}
+
+void MainWidget::all_selected()
+{
+    {
+        /** 将当前文件移动到 catalog 对应的子目录中.
+         *  从 img_fnames_.front() 删除，保存到 undo_list_ 中，用于支持undo
+         */
+        QString src_fname = img_fnames_.front();
+        QString dst_fname = cataloged_fname(src_fname);
+
+        // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
+        QDir curr(IMG_PATH);
+        QString subdirname = where_ + '-' + what_ + '-' + who_;
+        curr.mkdir(subdirname);
+
+        QFile::rename(src_fname, dst_fname);
+
+        undo_list_.push(dst_fname);
+        img_fnames_.pop_front();
+
+        show_curr();
+        show_info();
+
+        enable_buts(but_wheres_, true);
+        enable_buts(but_whats_, false);
+        enable_buts(but_whos_, false);
+
+        ui->button_undo->setEnabled(true);
+    }
 }
 
 void MainWidget::but_who_selected()
@@ -241,30 +287,7 @@ void MainWidget::but_who_selected()
     QRadioButton *but = (QRadioButton*)sender();
     who_ = but->text();
 
-    /** 将当前文件移动到 catalog 对应的子目录中.
-     *  从 img_fnames_.front() 删除，保存到 undo_list_ 中，用于支持undo
-     */
-    QString src_fname = img_fnames_.front();
-    QString dst_fname = cataloged_fname(src_fname);
-
-    // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
-    QDir curr(IMG_PATH);
-    QString subdirname = where_ + '-' + what_ + '-' + who_;
-    curr.mkdir(subdirname);
-
-    QFile::rename(src_fname, dst_fname);
-
-    undo_list_.push(dst_fname);
-    img_fnames_.pop_front();
-
-    show_curr();
-    show_info();
-
-    enable_buts(but_wheres_, true);
-    enable_buts(but_whats_, false);
-    enable_buts(but_whos_, false);
-
-    ui->button_undo->setEnabled(true);
+    all_selected();
 }
 
 void MainWidget::undo()
