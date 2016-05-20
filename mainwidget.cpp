@@ -84,6 +84,7 @@ MainWidget::MainWidget(QWidget *parent) :
     ui->button_undo->setEnabled(false);
 
     QObject::connect(ui->pushButton_skip, SIGNAL(clicked()), this, SLOT(but_skipped()));
+    QObject::connect(ui->pushButton_confused, SIGNAL(clicked()), this, SLOT(but_confused()));
 
     QPixmap *img = next_image();
     if (img) {
@@ -200,6 +201,28 @@ void MainWidget::but_skipped()
     // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
     QDir curr(IMG_PATH);
     QString subdirname = "skipped";
+    curr.mkdir(subdirname);
+
+    QFile::rename(src_fname, dst_fname);
+
+    img_fnames_.pop_front();
+
+    show_curr();
+    show_info();
+
+    enable_buts(but_wheres_, true);
+    enable_buts(but_whats_, false);
+    enable_buts(but_whos_, false);
+}
+
+void MainWidget::but_confused()
+{
+    QString src_fname = img_fnames_.front();
+    QString dst_fname = cataloged_fname("confused", src_fname);
+
+    // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
+    QDir curr(IMG_PATH);
+    QString subdirname = "confused";
     curr.mkdir(subdirname);
 
     QFile::rename(src_fname, dst_fname);

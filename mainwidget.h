@@ -34,6 +34,7 @@ private slots:
     void but_what_selected();
     void undo();
     void but_skipped();
+    void but_confused();
 
 private:
     Ui::MainWidget *ui;

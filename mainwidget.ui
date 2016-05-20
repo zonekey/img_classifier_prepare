@@ -79,6 +79,13 @@
          </layout>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButton_confused">
+          <property name="text">
+           <string>迷惑/争议的图片</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="pushButton_skip">
           <property name="text">
            <string>跳过该图片</string>
