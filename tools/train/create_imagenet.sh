@@ -6,8 +6,8 @@
 # already been resized using another tool.
 RESIZE=true
 if $RESIZE; then
-  RESIZE_HEIGHT=256
-  RESIZE_WIDTH=256
+  RESIZE_HEIGHT=28
+  RESIZE_WIDTH=28
 else
   RESIZE_HEIGHT=0
   RESIZE_WIDTH=0
@@ -19,8 +19,9 @@ GLOG_logtostderr=1 convert_imageset.bin \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
-    ./ \
-    train.txt \
+	--gray=true \
+    ../images/ \
+    ../images/train.txt \
     train_lmdb
 
 echo "Creating val lmdb..."
@@ -29,8 +30,9 @@ GLOG_logtostderr=1 convert_imageset.bin \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
-	./ \
-    val.txt \
+	--gray=true \
+    ../images/ \
+    ../images/val.txt \
     val_lmdb
 
 echo "Done."
