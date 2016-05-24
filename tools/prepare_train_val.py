@@ -8,7 +8,7 @@
 #
 #################################################################
 
-''' 根据子目录，生成 train.txt val.txt 文件，方便训练 
+''' 根据子目录，生成 train.txt val.txt labels.txt 文件，方便训练
 '''
 
 import os, random
@@ -61,10 +61,13 @@ for n in os.listdir('./'):
     if os.path.isdir(catalog):
         catalogs.append(catalog)
 
+l = open('labels.txt', 'w')
 n = 0
 for catalog in catalogs:
     one_catalog(catalog, n)
+    l.write(str(n) + ' ' + catalog + '\n')
     n = n + 1
+l.close()
 
 # 合并 train_X.txt 到 train.txt
 t = open('train.txt', 'w')
