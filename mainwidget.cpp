@@ -1,4 +1,4 @@
-#include "mainwidget.h"
+﻿#include "mainwidget.h"
 #include "ui_mainwidget.h"
 #include <stdio.h>
 #include <QDir>
@@ -12,9 +12,13 @@
 #include <QPainter>
 #include <algorithm>
 #include <assert.h>
+#include <QTextCodec>
 
 #ifdef WIN32
 #   define snprintf _snprintf
+#   define TC "GBK"
+#else
+#   define TC "utf-8"
 #endif
 
 MainWidget::MainWidget(QWidget *parent) :
@@ -251,17 +255,18 @@ void MainWidget::but_what_selected()
     QRadioButton *but = (QRadioButton*)sender();
     what_ = but->text();
 
+    QTextCodec *tc = QTextCodec::codecForName(TC);
     /** FIXME: 如果what_为“集体xxx”，则自动选择 who_ 为多人，然后下一张.
      *         如果 what_ 为“无”，则自动选择 who_ 为“无人”，然后下一张 .
      */
-    if (what_.indexOf("集体") == 0) {
-        who_ = "多人";
+    if (what_.indexOf(tc->toUnicode("集体")) == 0) {
+        who_ = tc->toUnicode("多人");
         all_selected();
         return;
     }
 
-    if (what_.indexOf("无人") == 0) {
-        who_ = "无人";
+    if (what_.indexOf(tc->toUnicode("无人")) == 0) {
+        who_ = tc->toUnicode("无人");
         all_selected();
         return;
     }
@@ -334,5 +339,5 @@ void MainWidget::show_info()
 {
     char buf[128];
     snprintf(buf, sizeof(buf), "剩余: %u", img_fnames_.size());
-    setWindowTitle(buf);
+    setWindowTitle(QTextCodec::codecForName(TC)->toUnicode(buf));
 }
