@@ -65,7 +65,7 @@ l = open('labels.txt', 'w')
 n = 0
 for catalog in catalogs:
     one_catalog(catalog, n)
-    l.write(str(n) + ' ' + catalog + '\n')
+    l.write(catalog + '\n')
     n = n + 1
 l.close()
 
