@@ -93,9 +93,9 @@ def one_catalog2(path, c):
     else:
         for i in range(0, len(imgs)):
             if i % 5 == 0:
-                v.write(fn + ' ' + label + '\n')
+                v.write(imgs[i] + ' ' + label + '\n')
             else:
-                t.write(fn + ' ' + label + '\n')
+                t.write(imgs[i] + ' ' + label + '\n')
         t.close()
         v.close()
 
