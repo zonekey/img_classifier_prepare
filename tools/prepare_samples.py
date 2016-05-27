@@ -12,6 +12,7 @@
 '''
 
 import os, random, json, sys
+import codecs
 
 reserved = [ 'skipped', 'confused' ]
 catalogs = []
@@ -36,48 +37,58 @@ def load_catalogs(fname):
 testing = True
 
 try:
-    if args[1] == 'train_val':
+    if sys.argv[1] == 'train_val':
         testing = False
 except:
     pass
+
+if testing:
+    print 'INFO: gather testing samples....'
+else:
+    print 'INFO: prepare train & val samples ...'
 
 
 cfg = load_catalogs('catalogs.json')
 root = cfg['root']
 catalogs = cfg['catalogs']
 
+print 'INFO: there are %d catalogs' % len(catalogs)
+print 'INFO: root path:', root
+
 
 def one_subdir(sub):
     imgs = []
     for fn in os.listdir(sub):
-        if os.path.isfile(fn) and is_imagefile(fn):
+        if os.path.isfile(sub + '/' + fn) and is_imagefile(fn):
             imgs.append(sub + '/' + fn)
     return imgs
 
 
-def one_catalog2(root, c):
+def one_catalog2(path, c):
     label = str(c['label'])
     if testing:
-        t = open('test_' + label, 'w')
+        t = codecs.open('test_' + label, 'w', encoding='utf-8')
     else:
-        t = open('train_' + label, 'w')
-        v = open('val_' + label, 'w')
+        t = codecs.open('train_' + label, 'w', encoding='utf-8')
+        v = codecs.open('val_' + label, 'w', encoding='utf-8')
 
     imgs = []
-    for fn in os.listdir(root):
-        if not os.path.isdir(fn):
+    for fn in os.listdir(path):
+        if not os.path.isdir(path + '/' + fn):
             continue
-        
+
         if fn in reserved:
             continue
 
         if fn in c['titles']:
-            imgs.append(one_subdir(root + '/' + fn))
+            subimgs = one_subdir(path + '/' + fn)
+            for sfn in subimgs:
+                imgs.append(sfn)
 
-    random.shuffle(imgs)
     if testing:
         for fn in imgs:
-            t.write(fn + ' ' + label + '\n')
+            x = fn + ' ' + label;
+            t.write(x + '\n')
         t.close()
     else:
         for i in range(0, len(imgs)):
@@ -96,23 +107,26 @@ for c in catalogs:
 if testing:
     t = open('test.txt', 'w')
     for i in range(0, len(catalogs)):
-        with open('test_' + str(i), 'r') as f
+        with open('test_' + str(i), 'r') as f:
             for line in f:
                 t.write(line)
+        os.remove('test_' + str(i))
     t.close()
 else:
     t = open('train.txt', 'w')
     v = open('val.txt', 'w')
-    for i in range(0, n):
-        ft = open('train_' + str(i) + '.txt', 'r')
+    for i in range(0, len(catalogs)):
+        ft = open('train_' + str(i), 'r')
         for line in ft:
             t.write(line)
         ft.close()
+        os.remove('train_' + str(i))
 
-        fv = open('val_' + str(i) + '.txt', 'r')
+        fv = open('val_' + str(i), 'r')
         for line in fv:
             v.write(line)
         fv.close()
+        os.remove('val_' + str(i))
     t.close()
     v.close()
 
