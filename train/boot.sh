@@ -28,3 +28,15 @@ else
 	ln -s /usr/local/share/shanghai/labels.txt labels.txt
 fi
 
+if [ -f 'catalogs.json' ];
+then
+	echo 'catalogs.json exist'
+else
+	echo 'updating labels ...'
+	python ../tools/label_txt2json.py
+	cat catalogs.json | json_pp > catalogs.pp
+	mv catalogs.pp catalogs.json
+fi
+
+echo 'all done'
+
