@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <QTextCodec>
+#include <QSizePolicy>
 
 #ifdef WIN32
 #   define snprintf _snprintf
@@ -29,66 +30,85 @@ MainWidget::MainWidget(QWidget *parent) :
 
     load_image_fnames();
 
-    QObject::connect(ui->button_undo, SIGNAL(clicked(void)), this, SLOT(undo()));
+    ui->groupBox_subjects->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    ui->groupBox_regions->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    ui->groupBox_actions->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    ui->groupBox_objects->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+
 
 #ifdef Q_OS_WIN32
-#   define WHERE "./cfg.d/where.txt"
+#   define WHO "./cfg.d/subject.txt"
 #else
-#   define WHERE "./cfg.d/where.utf8.txt"
+#   define WHO "./cfg.d/subject.utf8.txt"
 #endif
 
-    catalogs_ = load_catalogs(WHERE);
-    for (size_t i = 0; i < catalogs_.size(); i++) {
-        QString title(catalogs_[i].first), note(catalogs_[i].second);
+    subjects_ = load_catalogs(WHO);
+    ui->groupBox_subjects->setLayout(new QVBoxLayout);
+    for (size_t i = 0; i < subjects_.size(); i++) {
+        QString title(subjects_[i].first), note(subjects_[i].second);
         QRadioButton *but = new QRadioButton(title);
         but->setToolTip(note);
-        ui->verticalLayout_where->addWidget(but);
-        but_wheres_.push_back(but);
-        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_where_selected(void)));
+        but_subjects_.push_back(but);
+        ui->groupBox_subjects->layout()->addWidget(but);
+        QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_subject_selected()));
     }
 
 #ifdef Q_OS_WIN32
-#   define WHAT "./cfg.d/what.txt"
+#   define WHERE "./cfg.d/region.txt"
 #else
-#   define WHAT "./cfg.d/what.utf8.txt"
+#   define WHERE "./cfg.d/region.utf8.txt"
 #endif
 
-    catalogs2_ = load_catalogs(WHAT);
-    for (size_t i = 0; i < catalogs2_.size(); i++) {
-        QString title(catalogs2_[i].first), note(catalogs2_[i].second);
+    subjects_ = load_catalogs(WHERE);
+    ui->groupBox_regions->setLayout(new QVBoxLayout);
+    for (size_t i = 0; i < subjects_.size(); i++) {
+        QString title(subjects_[i].first), note(subjects_[i].second);
         QRadioButton *but = new QRadioButton(title);
         but->setToolTip(note);
-        ui->verticalLayout_what->addWidget(but);
-        but_whats_.push_back(but);
-
-        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_what_selected()));
+        but_regions_.push_back(but);
+        ui->groupBox_regions->layout()->addWidget(but);
+        QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_regions_selected()));
     }
 
 #ifdef Q_OS_WIN32
-#   define WHO "./cfg.d/who.txt"
+#   define WHAT "./cfg.d/action.txt"
 #else
-#   define WHO "./cfg.d/who.utf8.txt"
+#   define WHAT "./cfg.d/action.utf8.txt"
 #endif
 
-    std::vector<std::pair<QString, QString> > catalogs3 = load_catalogs(WHO);
-    for (size_t i = 0; i < catalogs3.size(); i++) {
-        QString title(catalogs3[i].first), note(catalogs3[i].second);
+    actions_ = load_catalogs(WHAT);
+    ui->groupBox_actions->setLayout(new QVBoxLayout);
+    for (size_t i = 0; i < actions_.size(); i++) {
+        QString title(actions_[i].first), note(actions_[i].second);
         QRadioButton *but = new QRadioButton(title);
         but->setToolTip(note);
-        ui->verticalLayout_who->addWidget(but);
-        but_whos_.push_back(but);
-
-        QObject::connect(but, SIGNAL(clicked(void)), this, SLOT(but_who_selected(void)));
+        but_actions_.push_back(but);
+        ui->groupBox_actions->layout()->addWidget(but);
+        QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_actions_selected()));
     }
 
-    enable_buts(but_wheres_, true);
-    enable_buts(but_whats_, false);
-    enable_buts(but_whos_, false);
+#ifdef Q_OS_WIN32
+#   define OBJECTS "./cfg.d/object.txt"
+#else
+#   define OBJECTS "./cfg.d/object.utf8.txt"
+#endif
 
-    ui->button_undo->setEnabled(false);
+    objects_ = load_catalogs(OBJECTS);
+    ui->groupBox_objects->setLayout(new QVBoxLayout);
+    for (size_t i = 0; i < objects_.size(); i++) {
+        QString title(objects_[i].first), note(objects_[i].second);
+        QRadioButton *but = new QRadioButton(title);
+        but->setToolTip(note);
+        but_objects_.push_back(but);
+        ui->groupBox_objects->layout()->addWidget(but);
+        QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_objects_selected()));
+    }
 
-    QObject::connect(ui->pushButton_skip, SIGNAL(clicked()), this, SLOT(but_skipped()));
-    QObject::connect(ui->pushButton_confused, SIGNAL(clicked()), this, SLOT(but_confused()));
+    QObject::connect(ui->pushButton_cancel, SIGNAL(clicked()), this, SLOT(undo()));
+    QObject::connect(ui->pushButton_prev, SIGNAL(clicked()), this, SLOT(but_prev()));
+
+    enable_buts();
+    show_buttons();
 
     QPixmap *img = next_image();
     if (img) {
@@ -123,7 +143,7 @@ std::vector<std::pair<QString, QString> > MainWidget::load_catalogs(const char *
 
         while (!ts.atEnd()) {
             QString line = ts.readLine().simplified();
-            if (line.count() > 2) {
+            if (line.count() >= 2) {
                 QString catalog = line;
                 QString note;
                 int pos = line.indexOf(':');    // 后面作为注释 ...
@@ -195,6 +215,10 @@ void MainWidget::show_curr()
         show_image(img);
         delete img;
     }
+    else {
+        // 没有了，需要清空 ...
+
+    }
 }
 
 void MainWidget::but_skipped()
@@ -214,9 +238,27 @@ void MainWidget::but_skipped()
     show_curr();
     show_info();
 
-    enable_buts(but_wheres_, true);
-    enable_buts(but_whats_, false);
-    enable_buts(but_whos_, false);
+    enable_buts();
+}
+
+void MainWidget::but_prev()
+{
+    // TODO:
+    if (!object_.isEmpty()) {
+        object_.clear();
+    }
+    else if (!action_.isEmpty()) {
+        action_.clear();
+    }
+    else if (!region_.isEmpty()) {
+        region_.clear();
+    }
+    else {
+        subject_.clear();
+    }
+
+    show_buttons();
+    enable_buts();
 }
 
 void MainWidget::but_confused()
@@ -236,86 +278,34 @@ void MainWidget::but_confused()
     show_curr();
     show_info();
 
-    enable_buts(but_wheres_, true);
-    enable_buts(but_whats_, false);
-    enable_buts(but_whos_, false);
-}
-
-void MainWidget::but_where_selected()
-{
-    QRadioButton *but = (QRadioButton*)sender();
-    where_ = but->text();
-    enable_buts(but_whats_, true);
-
-    ui->button_undo->setEnabled(false);
-}
-
-void MainWidget::but_what_selected()
-{
-    QRadioButton *but = (QRadioButton*)sender();
-    what_ = but->text();
-
-    QTextCodec *tc = QTextCodec::codecForName(TC);
-    /** FIXME: 如果what_为“集体xxx”，则自动选择 who_ 为多人，然后下一张.
-     *         如果 what_ 为“无”，则自动选择 who_ 为“无人”，然后下一张 .
-     */
-    if (what_.indexOf(tc->toUnicode("集体")) == 0) {
-        who_ = tc->toUnicode("多人");
-        all_selected();
-        return;
-    }
-
-    if (what_.indexOf(tc->toUnicode("无人")) == 0) {
-        who_ = tc->toUnicode("无人");
-        all_selected();
-        return;
-    }
-
-    enable_buts(but_whos_, true);
-
-    ui->button_undo->setEnabled(false);
+    enable_buts();
 }
 
 void MainWidget::all_selected()
 {
-    {
-        /** 将当前文件移动到 catalog 对应的子目录中.
-         *  从 img_fnames_.front() 删除，保存到 undo_list_ 中，用于支持undo
-         */
-        QString src_fname = img_fnames_.front();
-        QString dst_fname = cataloged_fname(src_fname);
+    /** 将当前文件移动到 catalog 对应的子目录中.
+     *  从 img_fnames_.front() 删除，保存到 undo_list_ 中，用于支持undo
+     */
+    QString subdirname = subject_ + '-' + region_ + '-' + action_ + '-' + object_;
+    QString src_fname = img_fnames_.front();
+    QString dst_fname = cataloged_filename(src_fname, subdirname);
 
-        // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
-        QDir curr(IMG_PATH);
-        QString subdirname = where_ + '-' + what_ + '-' + who_;
-        curr.mkdir(subdirname);
+    // FIXME: 应该检查目录是否存在，如果不存在，则创建 ...
+    QDir curr(IMG_PATH);
+    curr.mkdir(subdirname);
 
-        QFile::rename(src_fname, dst_fname);
+    QFile::rename(src_fname, dst_fname);
 
-        undo_list_.push(dst_fname);
-        img_fnames_.pop_front();
+    undo_list_.push(dst_fname);
+    img_fnames_.pop_front();
 
-        show_curr();
-        show_info();
+    show_curr();
+    show_info();
 
-        enable_buts(but_wheres_, true);
-        enable_buts(but_whats_, false);
-        enable_buts(but_whos_, false);
-
-        ui->button_undo->setEnabled(true);
-    }
-}
-
-void MainWidget::but_who_selected()
-{
-    if (img_fnames_.empty()) {
-        return; // TODO: 应该禁用按钮 ...
-    }
-
-    QRadioButton *but = (QRadioButton*)sender();
-    who_ = but->text();
-
-    all_selected();
+    subject_.clear();
+    region_.clear();
+    actions_.clear();
+    object_.clear();
 }
 
 void MainWidget::undo()
@@ -333,6 +323,40 @@ void MainWidget::undo()
 
     show_curr();
     show_info();
+
+    enable_buts();
+}
+
+///
+void MainWidget::but_subject_selected()
+{
+    QPushButton *but = (QPushButton*)sender();
+    subject_ = but->text();
+    show_buttons();
+}
+
+void MainWidget::but_regions_selected()
+{
+    QPushButton *but = (QPushButton*)sender();
+    region_ = but->text();
+    show_buttons();
+}
+
+void MainWidget::but_actions_selected()
+{
+    QPushButton *but = (QPushButton*)sender();
+    action_ = but->text();
+    show_buttons();
+}
+
+void MainWidget::but_objects_selected()
+{
+    QPushButton *but = (QPushButton*)sender();
+    object_ = but->text();
+
+    all_selected();
+
+    show_buttons();
 }
 
 void MainWidget::show_info()
@@ -340,4 +364,41 @@ void MainWidget::show_info()
     char buf[128];
     snprintf(buf, sizeof(buf), "剩余: %u", img_fnames_.size());
     setWindowTitle(QTextCodec::codecForName(TC)->toUnicode(buf));
+}
+
+void MainWidget::show_buttons()
+{
+    if (subject_.isEmpty()) {
+        ui->groupBox_subjects->show();
+        ui->groupBox_regions->hide();
+        ui->groupBox_actions->hide();
+        ui->groupBox_objects->hide();
+    }
+    else if (region_.isEmpty()) {
+        ui->groupBox_subjects->hide();
+        ui->groupBox_regions->show();
+        ui->groupBox_actions->hide();
+        ui->groupBox_objects->hide();
+    }
+    else if (action_.isEmpty()) {
+        ui->groupBox_subjects->hide();
+        ui->groupBox_regions->hide();
+        ui->groupBox_actions->show();
+        ui->groupBox_objects->hide();
+    }
+    else {
+        ui->groupBox_subjects->hide();
+        ui->groupBox_regions->hide();
+        ui->groupBox_actions->hide();
+        ui->groupBox_objects->show();
+    }
+
+    enable_buts();
+}
+
+void MainWidget::enable_buts()
+{
+    enable_buts(but_subjects_, !img_fnames_.empty());
+    ui->pushButton_cancel->setEnabled(!undo_list_.empty());
+    ui->pushButton_prev->setEnabled(!subject_.isEmpty());
 }

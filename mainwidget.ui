@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1181</width>
+    <width>1214</width>
     <height>640</height>
    </rect>
   </property>
@@ -26,81 +26,72 @@
       <widget class="QWidget" name="widget_show" native="true"/>
      </item>
      <item>
-      <widget class="QWidget" name="widget_2" native="true">
+      <widget class="QWidget" name="widget_oper" native="true">
        <property name="maximumSize">
         <size>
          <width>300</width>
          <height>16777215</height>
         </size>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_x">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout">
-            <item>
-             <widget class="QGroupBox" name="groupBox_where">
-              <property name="title">
-               <string>where</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_4">
+           <widget class="QWidget" name="widget" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
-                <layout class="QVBoxLayout" name="verticalLayout_where"/>
+                <widget class="QGroupBox" name="groupBox_subjects">
+                 <property name="title">
+                  <string>Subjects</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox_regions">
+                 <property name="title">
+                  <string>Regions</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox_actions">
+                 <property name="title">
+                  <string>Actions</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox_objects">
+                 <property name="title">
+                  <string>Objects</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="widget_2" native="true"/>
                </item>
               </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="groupBox_what">
-              <property name="title">
-               <string>what</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_8">
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_what"/>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="groupBox_who">
-              <property name="title">
-               <string>who</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_7">
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_who"/>
-               </item>
-              </layout>
-             </widget>
-            </item>
-           </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_prev">
+            <property name="text">
+             <string>上一步</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_cancel">
+            <property name="text">
+             <string>撤销</string>
+            </property>
+           </widget>
           </item>
          </layout>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_confused">
-          <property name="text">
-           <string>迷惑/争议的图片</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_skip">
-          <property name="text">
-           <string>跳过该图片</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_undo">
-          <property name="text">
-           <string>撤销</string>
-          </property>
-          <property name="flat">
-           <bool>false</bool>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
