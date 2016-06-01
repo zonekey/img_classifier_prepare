@@ -432,12 +432,15 @@ void MainWidget::but_objects_selected()
 void MainWidget::show_info()
 {
     char buf[128];
-    snprintf(buf, sizeof(buf), "剩余: %u", img_fnames_.size());
-    setWindowTitle(QTextCodec::codecForName(TC)->toUnicode(buf));
+    snprintf(buf, sizeof(buf), "剩余: %u  ", img_fnames_.size());
+    QString title = QTextCodec::codecForName(TC)->toUnicode(buf);
+    title += subject_ + " " + region_ + " " + action_ + " " + object_;
+    setWindowTitle(title);
 }
 
 void MainWidget::show_buttons()
 {
+    show_info();
     if (subject_.isEmpty()) {
         ui->groupBox_subjects->show();
         ui->groupBox_regions->hide();
