@@ -47,7 +47,7 @@ MainWidget::MainWidget(QWidget *parent) :
     subjects_ = load_catalogs(WHO);
     ui->groupBox_subjects->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < subjects_.size(); i++) {
-        QString text = QString("%1 (%2)").arg(subjects_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QString text = QString("%1 (%2)").arg(subjects_[i].first).arg(i >= 10 ? (char)(i + 'a' - 10) : (char)(i + '0'));
         QString note(subjects_[i].second);
         QRadioButton *but = new QRadioButton(text);
         but->setProperty("title", subjects_[i].first);
@@ -65,8 +65,8 @@ MainWidget::MainWidget(QWidget *parent) :
 
     regions_ = load_catalogs(WHERE);
     ui->groupBox_regions->setLayout(new QVBoxLayout);
-    for (size_t i = 0; i < subjects_.size(); i++) {
-        QString text = QString("%1 (%2)").arg(regions_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+    for (size_t i = 0; i < regions_.size(); i++) {
+        QString text = QString("%1 (%2)").arg(regions_[i].first).arg(i >= 10 ? (char)(i + 'a' - 10) : (char)(i + '0'));
         QRadioButton *but = new QRadioButton(text);
         but->setProperty("title", regions_[i].first);
         but->setToolTip(regions_[i].second);
@@ -84,7 +84,7 @@ MainWidget::MainWidget(QWidget *parent) :
     actions_ = load_catalogs(WHAT);
     ui->groupBox_actions->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < actions_.size(); i++) {
-        QString text = QString("%1 (%2)").arg(actions_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QString text = QString("%1 (%2)").arg(actions_[i].first).arg(i >= 10 ? (char)(i + 'a' - 10) : (char)(i + '0'));
         QRadioButton *but = new QRadioButton(text);
         but->setProperty("title", actions_[i].first);
         but->setToolTip(actions_[i].second);
@@ -102,7 +102,7 @@ MainWidget::MainWidget(QWidget *parent) :
     objects_ = load_catalogs(OBJECTS);
     ui->groupBox_objects->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < objects_.size(); i++) {
-        QString text = QString("%1 (%2)").arg(objects_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QString text = QString("%1 (%2)").arg(objects_[i].first).arg(i >= 10 ? (char)(i + 'a' - 10) : (char)(i + '0'));
         QRadioButton *but = new QRadioButton(text);
         but->setToolTip(objects_[i].second);
         but->setProperty("title", objects_[i].first);
@@ -115,6 +115,8 @@ MainWidget::MainWidget(QWidget *parent) :
 
     QObject::connect(ui->pushButton_cancel, SIGNAL(clicked()), this, SLOT(undo()));
     QObject::connect(ui->pushButton_prev, SIGNAL(clicked()), this, SLOT(but_prev()));
+    QObject::connect(ui->pushButton_confused, SIGNAL(clicked()), this, SLOT(but_confused()));
+    QObject::connect(ui->pushButton_skip, SIGNAL(clicked()), this, SLOT(but_skipped()));
 
     enable_buts();
     show_buttons();
@@ -138,7 +140,7 @@ MainWidget::~MainWidget()
 bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
 {
     if (evt->type() == QEvent::KeyPress) {
-        if (obj == ui->groupBox_subjects || obj == ui->groupBox_regions || obj == ui->groupBox_actions || obj == ui->groupBox_objects) {
+        if (obj == this) {
             QKeyEvent *keyevt = (QKeyEvent*)evt;
             int key = keyevt->key();
 
@@ -159,11 +161,21 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
                 // 模拟发出click，相当于选中类别 ..
                 if (((*buts_curr_)[idx])->isEnabled()) {
                     QPointF lpos(1, 1);
-                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
+                                                      Qt::LeftButton, Qt::NoModifier);
                     QCoreApplication::postEvent((*buts_curr_)[idx], sk);
                     sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
                     QCoreApplication::postEvent((*buts_curr_)[idx], sk);
                 }
+            }
+            else if (idx == -2) {
+                // 模拟 prev
+                QPointF lpos(1, 1);
+                QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
+                                                  Qt::LeftButton, Qt::NoModifier);
+                QCoreApplication::postEvent(ui->pushButton_prev, sk);
+                sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                QCoreApplication::postEvent(ui->pushButton_prev, sk);
             }
         }
     }
@@ -286,6 +298,7 @@ void MainWidget::but_skipped()
     show_info();
 
     enable_buts();
+    show_buttons();
 }
 
 void MainWidget::but_prev()
@@ -326,6 +339,7 @@ void MainWidget::but_confused()
     show_info();
 
     enable_buts();
+    show_buttons();
 }
 
 void MainWidget::all_selected()
@@ -351,7 +365,7 @@ void MainWidget::all_selected()
 
     subject_.clear();
     region_.clear();
-    actions_.clear();
+    action_.clear();
     object_.clear();
 }
 
@@ -372,6 +386,7 @@ void MainWidget::undo()
     show_info();
 
     enable_buts();
+    show_buttons();
 }
 
 ///
@@ -380,15 +395,21 @@ void MainWidget::but_subject_selected()
     QPushButton *but = (QPushButton*)sender();
     subject_ = but->property("title").toString();
     show_buttons();
-    buts_curr_ = &but_regions_;
 }
 
 void MainWidget::but_regions_selected()
 {
     QPushButton *but = (QPushButton*)sender();
     region_ = but->property("title").toString();
+
+    // NOTE: 如果 subject_ == "无人"，则自动填充 action_ = "无", object_ = "无"，并完成
+    if (subject_ == subjects_[0].first) {
+        action_ = actions_[0].first;    // FIXME: 要求 action.txt, object.txt 的第一行必须是“无人”的对应 ...
+        object_ = objects_[0].first;
+        all_selected();
+    }
+
     show_buttons();
-    buts_curr_ = &but_actions_;
 }
 
 void MainWidget::but_actions_selected()
@@ -396,7 +417,6 @@ void MainWidget::but_actions_selected()
     QPushButton *but = (QPushButton*)sender();
     action_ = but->property("title").toString();
     show_buttons();
-    buts_curr_ = &but_objects_;
 }
 
 void MainWidget::but_objects_selected()
@@ -407,7 +427,6 @@ void MainWidget::but_objects_selected()
     all_selected();
 
     show_buttons();
-    buts_curr_ = &but_subjects_;
 }
 
 void MainWidget::show_info()
@@ -424,24 +443,32 @@ void MainWidget::show_buttons()
         ui->groupBox_regions->hide();
         ui->groupBox_actions->hide();
         ui->groupBox_objects->hide();
+
+        buts_curr_ = &but_subjects_;
     }
     else if (region_.isEmpty()) {
         ui->groupBox_subjects->hide();
         ui->groupBox_regions->show();
         ui->groupBox_actions->hide();
         ui->groupBox_objects->hide();
+
+        buts_curr_ = &but_regions_;
     }
     else if (action_.isEmpty()) {
         ui->groupBox_subjects->hide();
         ui->groupBox_regions->hide();
         ui->groupBox_actions->show();
         ui->groupBox_objects->hide();
+
+        buts_curr_ = &but_actions_;
     }
     else {
         ui->groupBox_subjects->hide();
         ui->groupBox_regions->hide();
         ui->groupBox_actions->hide();
         ui->groupBox_objects->show();
+
+        buts_curr_ = &but_objects_;
     }
 
     enable_buts();

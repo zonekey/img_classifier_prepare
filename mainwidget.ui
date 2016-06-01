@@ -78,6 +78,20 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="pushButton_skip">
+            <property name="text">
+             <string>跳过该图片</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_confused">
+            <property name="text">
+             <string>不确定的图像</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="pushButton_prev">
             <property name="text">
              <string>上一步</string>
