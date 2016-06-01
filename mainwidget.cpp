@@ -14,6 +14,8 @@
 #include <assert.h>
 #include <QTextCodec>
 #include <QSizePolicy>
+#include <QKeyEvent>
+#include <QDebug>
 
 #ifdef WIN32
 #   define snprintf _snprintf
@@ -45,8 +47,10 @@ MainWidget::MainWidget(QWidget *parent) :
     subjects_ = load_catalogs(WHO);
     ui->groupBox_subjects->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < subjects_.size(); i++) {
-        QString title(subjects_[i].first), note(subjects_[i].second);
-        QRadioButton *but = new QRadioButton(title);
+        QString text = QString("%1 (%2)").arg(subjects_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QString note(subjects_[i].second);
+        QRadioButton *but = new QRadioButton(text);
+        but->setProperty("title", subjects_[i].first);
         but->setToolTip(note);
         but_subjects_.push_back(but);
         ui->groupBox_subjects->layout()->addWidget(but);
@@ -59,12 +63,13 @@ MainWidget::MainWidget(QWidget *parent) :
 #   define WHERE "./cfg.d/region.utf8.txt"
 #endif
 
-    subjects_ = load_catalogs(WHERE);
+    regions_ = load_catalogs(WHERE);
     ui->groupBox_regions->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < subjects_.size(); i++) {
-        QString title(subjects_[i].first), note(subjects_[i].second);
-        QRadioButton *but = new QRadioButton(title);
-        but->setToolTip(note);
+        QString text = QString("%1 (%2)").arg(regions_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QRadioButton *but = new QRadioButton(text);
+        but->setProperty("title", regions_[i].first);
+        but->setToolTip(regions_[i].second);
         but_regions_.push_back(but);
         ui->groupBox_regions->layout()->addWidget(but);
         QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_regions_selected()));
@@ -79,9 +84,10 @@ MainWidget::MainWidget(QWidget *parent) :
     actions_ = load_catalogs(WHAT);
     ui->groupBox_actions->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < actions_.size(); i++) {
-        QString title(actions_[i].first), note(actions_[i].second);
-        QRadioButton *but = new QRadioButton(title);
-        but->setToolTip(note);
+        QString text = QString("%1 (%2)").arg(actions_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QRadioButton *but = new QRadioButton(text);
+        but->setProperty("title", actions_[i].first);
+        but->setToolTip(actions_[i].second);
         but_actions_.push_back(but);
         ui->groupBox_actions->layout()->addWidget(but);
         QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_actions_selected()));
@@ -96,13 +102,16 @@ MainWidget::MainWidget(QWidget *parent) :
     objects_ = load_catalogs(OBJECTS);
     ui->groupBox_objects->setLayout(new QVBoxLayout);
     for (size_t i = 0; i < objects_.size(); i++) {
-        QString title(objects_[i].first), note(objects_[i].second);
-        QRadioButton *but = new QRadioButton(title);
-        but->setToolTip(note);
+        QString text = QString("%1 (%2)").arg(objects_[i].first).arg(i >= 10 ? (char)(i + 'a') : (char)(i + '0'));
+        QRadioButton *but = new QRadioButton(text);
+        but->setToolTip(objects_[i].second);
+        but->setProperty("title", objects_[i].first);
         but_objects_.push_back(but);
         ui->groupBox_objects->layout()->addWidget(but);
         QObject::connect(but, SIGNAL(clicked()), this, SLOT(but_objects_selected()));
     }
+
+    buts_curr_ = &but_subjects_;
 
     QObject::connect(ui->pushButton_cancel, SIGNAL(clicked()), this, SLOT(undo()));
     QObject::connect(ui->pushButton_prev, SIGNAL(clicked()), this, SLOT(but_prev()));
@@ -117,11 +126,49 @@ MainWidget::MainWidget(QWidget *parent) :
     }
 
     show_info();
+
+    qApp->installEventFilter(this);
 }
 
 MainWidget::~MainWidget()
 {
     delete ui;
+}
+
+bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
+{
+    if (evt->type() == QEvent::KeyPress) {
+        if (obj == ui->groupBox_subjects || obj == ui->groupBox_regions || obj == ui->groupBox_actions || obj == ui->groupBox_objects) {
+            QKeyEvent *keyevt = (QKeyEvent*)evt;
+            int key = keyevt->key();
+
+            int idx = -1;
+            if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+                idx = key - '0';
+            }
+            else if (key >= Qt::Key_A && key <= Qt::Key_Z) {
+                idx = key - 'A' + 10;
+            }
+            else if (key == Qt::Key_Escape) {
+                idx = -2;
+            }
+
+            qDebug() << idx;
+
+            if (idx >= 0 && idx < buts_curr_->size()) {
+                // 模拟发出click，相当于选中类别 ..
+                if (((*buts_curr_)[idx])->isEnabled()) {
+                    QPointF lpos(1, 1);
+                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent((*buts_curr_)[idx], sk);
+                    sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent((*buts_curr_)[idx], sk);
+                }
+            }
+        }
+    }
+
+    return QObject::eventFilter(obj, evt);
 }
 
 void MainWidget::paintEvent(QPaintEvent *pd)
@@ -331,32 +378,36 @@ void MainWidget::undo()
 void MainWidget::but_subject_selected()
 {
     QPushButton *but = (QPushButton*)sender();
-    subject_ = but->text();
+    subject_ = but->property("title").toString();
     show_buttons();
+    buts_curr_ = &but_regions_;
 }
 
 void MainWidget::but_regions_selected()
 {
     QPushButton *but = (QPushButton*)sender();
-    region_ = but->text();
+    region_ = but->property("title").toString();
     show_buttons();
+    buts_curr_ = &but_actions_;
 }
 
 void MainWidget::but_actions_selected()
 {
     QPushButton *but = (QPushButton*)sender();
-    action_ = but->text();
+    action_ = but->property("title").toString();
     show_buttons();
+    buts_curr_ = &but_objects_;
 }
 
 void MainWidget::but_objects_selected()
 {
     QPushButton *but = (QPushButton*)sender();
-    object_ = but->text();
+    object_ = but->property("title").toString();
 
     all_selected();
 
     show_buttons();
+    buts_curr_ = &but_subjects_;
 }
 
 void MainWidget::show_info()

@@ -28,6 +28,9 @@ public:
     explicit MainWidget(QWidget *parent = 0);
     ~MainWidget();
 
+protected:
+    bool eventFilter(QObject *, QEvent *);
+
 private slots:
     void undo();
     void but_skipped();
@@ -53,6 +56,7 @@ private:
     /// 来自配置文件的分类 ...
     std::vector<std::pair<QString, QString> > subjects_, regions_, actions_, objects_;
     std::vector<QRadioButton*> but_regions_, but_actions_, but_subjects_, but_objects_;
+    std::vector<QRadioButton*> *buts_curr_; //
 
     void load_image_fnames();
     std::vector<std::pair<QString, QString> > load_catalogs(const char *fname);
