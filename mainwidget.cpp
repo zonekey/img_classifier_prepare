@@ -296,6 +296,10 @@ void MainWidget::show_curr()
 
 void MainWidget::but_skipped()
 {
+    if (img_fnames_.empty()) {
+        return;
+    }
+
     QString src_fname = img_fnames_.front();
     QString dst_fname = cataloged_fname("skipped", src_fname);
 
@@ -338,6 +342,10 @@ void MainWidget::but_prev()
 
 void MainWidget::but_confused()
 {
+    if (img_fnames_.empty()) {
+        return;
+    }
+
     QString src_fname = img_fnames_.front();
     QString dst_fname = cataloged_fname("confused", src_fname);
 
