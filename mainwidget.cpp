@@ -151,11 +151,12 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
             else if (key >= Qt::Key_A && key <= Qt::Key_Z) {
                 idx = key - 'A' + 10;
             }
-            else if (key == Qt::Key_Escape) {
+            else if (key == Qt::Key_Escape || key == Qt::Key_Backspace) { // 使用退格键作为上一级 ..
                 idx = -2;
             }
-
-            qDebug() << idx;
+            else if (key == Qt::Key_Delete) {
+                idx = -3;   // Del 键跳过当前图片 ..
+            }
 
             if (idx >= 0 && idx < buts_curr_->size()) {
                 // 模拟发出click，相当于选中类别 ..
@@ -170,12 +171,25 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
             }
             else if (idx == -2) {
                 // 模拟 prev
-                QPointF lpos(1, 1);
-                QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
-                                                  Qt::LeftButton, Qt::NoModifier);
-                QCoreApplication::postEvent(ui->pushButton_prev, sk);
-                sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                QCoreApplication::postEvent(ui->pushButton_prev, sk);
+                if (ui->pushButton_prev) {
+                    QPointF lpos(1, 1);
+                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
+                                                      Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_prev, sk);
+                    sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_prev, sk);
+                }
+            }
+            else if (idx == -3) {
+                // 模拟 skip
+                if (ui->pushButton_skip->isEnabled()) {
+                    QPointF lpos(1, 1);
+                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
+                                                      Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_skip, sk);
+                    sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_skip, sk);
+                }
             }
         }
     }
@@ -318,6 +332,7 @@ void MainWidget::but_prev()
     }
 
     show_buttons();
+    show_info();
     enable_buts();
 }
 
@@ -395,6 +410,7 @@ void MainWidget::but_subject_selected()
     QPushButton *but = (QPushButton*)sender();
     subject_ = but->property("title").toString();
     show_buttons();
+    show_info();
 }
 
 void MainWidget::but_regions_selected()
@@ -408,6 +424,9 @@ void MainWidget::but_regions_selected()
         object_ = objects_[0].first;
         all_selected();
     }
+    else {
+        show_info();
+    }
 
     show_buttons();
 }
@@ -417,6 +436,7 @@ void MainWidget::but_actions_selected()
     QPushButton *but = (QPushButton*)sender();
     action_ = but->property("title").toString();
     show_buttons();
+    show_info();
 }
 
 void MainWidget::but_objects_selected()
@@ -434,13 +454,14 @@ void MainWidget::show_info()
     char buf[128];
     snprintf(buf, sizeof(buf), "剩余: %u  ", img_fnames_.size());
     QString title = QTextCodec::codecForName(TC)->toUnicode(buf);
+
     title += subject_ + " " + region_ + " " + action_ + " " + object_;
+
     setWindowTitle(title);
 }
 
 void MainWidget::show_buttons()
 {
-    show_info();
     if (subject_.isEmpty()) {
         ui->groupBox_subjects->show();
         ui->groupBox_regions->hide();
