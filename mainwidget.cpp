@@ -151,11 +151,17 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
             else if (key >= Qt::Key_A && key <= Qt::Key_Z) {
                 idx = key - 'A' + 10;
             }
-            else if (key == Qt::Key_Escape || key == Qt::Key_Backspace) { // 使用退格键作为上一级 ..
+            else if (key == Qt::Key_Backspace) { // 使用退格键作为上一级 ..
                 idx = -2;
             }
             else if (key == Qt::Key_Delete) {
                 idx = -3;   // Del 键跳过当前图片 ..
+            }
+            else if (key == Qt::Key_Escape) {
+                idx = -4;   // esc 作为 undo
+            }
+            else if (key == Qt::Key_Slash) {
+                idx = -5;   // /(?) 对应不确定
             }
 
             if (idx >= 0 && idx < buts_curr_->size()) {
@@ -189,6 +195,28 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
                     QCoreApplication::postEvent(ui->pushButton_skip, sk);
                     sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
                     QCoreApplication::postEvent(ui->pushButton_skip, sk);
+                }
+            }
+            else if (idx == -4) {
+                // 模拟 undo
+                if (ui->pushButton_skip->isEnabled()) {
+                    QPointF lpos(1, 1);
+                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
+                                                      Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_cancel, sk);
+                    sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_cancel, sk);
+                }
+            }
+            else if (idx == -5) {
+                // 模拟不确认
+                if (ui->pushButton_skip->isEnabled()) {
+                    QPointF lpos(1, 1);
+                    QMouseEvent *sk = new QMouseEvent(QEvent::MouseButtonPress, lpos, Qt::LeftButton,
+                                                      Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_confused, sk);
+                    sk = new QMouseEvent(QEvent::MouseButtonRelease, lpos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QCoreApplication::postEvent(ui->pushButton_confused, sk);
                 }
             }
         }
