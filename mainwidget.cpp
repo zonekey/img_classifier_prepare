@@ -16,6 +16,8 @@
 #include <QSizePolicy>
 #include <QKeyEvent>
 #include <QDebug>
+#include <opencv2/opencv.hpp>
+#include <QMessageBox>
 
 #ifdef WIN32
 #   define snprintf _snprintf
@@ -36,7 +38,6 @@ MainWidget::MainWidget(QWidget *parent) :
     ui->groupBox_regions->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     ui->groupBox_actions->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     ui->groupBox_objects->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-
 
 #ifdef Q_OS_WIN32
 #   define WHO "./cfg.d/subject.txt"
@@ -121,20 +122,39 @@ MainWidget::MainWidget(QWidget *parent) :
     enable_buts();
     show_buttons();
 
-    QPixmap *img = next_image();
-    if (img) {
-        show_image(img);
-        delete img;
-    }
+    loaded_ = load_models();
 
+    show_curr();
     show_info();
 
     qApp->installEventFilter(this);
+
+    fprintf(stdout, "INFO: model load %d\n", loaded_);
 }
 
 MainWidget::~MainWidget()
 {
     delete ui;
+}
+
+bool MainWidget::load_models()
+{
+    std::string deploy = "models/deploy.prototxt", pretrained = "models/pretrained.caffemodel",
+            mean = "models/mean.binaryproto", labels = "models/labels.txt";
+
+    cf_ = 0;
+    loaded_ = false;
+
+    try {
+        cf_ = new Classifier(deploy, pretrained, mean, labels);
+        loaded_ = true;
+    }
+    catch (...) {
+        QMessageBox *box = new QMessageBox(QMessageBox::NoIcon, QString("can't load"), "load fatal");
+        box->show();
+    }
+
+    return loaded_;
 }
 
 bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
@@ -295,6 +315,7 @@ QPixmap *MainWidget::next_image()
 {
     while (!img_fnames_.empty()) {
         QString fname = img_fnames_.front();
+        curr_fname_ = fname.toLocal8Bit().constData();
         QPixmap *img = new QPixmap(fname);
         if (img->isNull()) {
             fprintf(stderr, "WRN: '%s' can't load!\n", fname.toLocal8Bit().constData());
@@ -313,6 +334,13 @@ void MainWidget::show_curr()
 {
     QPixmap *img = next_image();
     if (img) {
+        if (loaded_) {
+            cv::Mat rgb = cv::imread(curr_fname_);
+            std::vector < Prediction > predictions = cf_->Classify(rgb);
+
+            pred_result_ = QString("%1(%2)").arg(predictions[0].first.c_str()).arg(predictions[0].second);
+            ui->label_result->setText(pred_result_);
+        }
         show_image(img);
         delete img;
     }

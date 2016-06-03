@@ -11,6 +11,8 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QDir>
+#include "kvconfig.h"
+#include "classifier.h"
 
 #define IMG_PATH "./image.d"
 #define CFG_PATH "./cfg.d"
@@ -51,7 +53,13 @@ private:
     /// 用于支持 undo
     std::stack<QString> undo_list_;
 
+    //
     QString subject_, region_, action_, object_;    // 当前选择 ..
+
+    /// 加载模型，尝试在分类之前，先进行预测 ...
+    bool loaded_;
+    Classifier *cf_;
+    bool load_models();
 
     /// 来自配置文件的分类 ...
     std::vector<std::pair<QString, QString> > subjects_, regions_, actions_, objects_;
@@ -65,6 +73,8 @@ private:
     // 下一张照片，当前照片位于 img_fnames_.front()
     QPixmap *next_image();
     QPixmap curr_image_;    // 正在显示的图像 ...
+    std::string curr_fname_;    // 正在显示的图像的文件名字 ..
+    QString pred_result_;       // 预测结果，在 paintEvent 中显示 ..
 
     void enable_buts(std::vector<QRadioButton*> buts, bool enable)
     {

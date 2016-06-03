@@ -29,7 +29,7 @@
       <widget class="QWidget" name="widget_oper" native="true">
        <property name="maximumSize">
         <size>
-         <width>300</width>
+         <width>400</width>
          <height>16777215</height>
         </size>
        </property>
@@ -60,6 +60,7 @@
                  <property name="title">
                   <string>Actions</string>
                  </property>
+                 <zorder>widget_show</zorder>
                 </widget>
                </item>
                <item>
@@ -73,6 +74,37 @@
                 <widget class="QWidget" name="widget_2" native="true"/>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_result">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Courier New</family>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
