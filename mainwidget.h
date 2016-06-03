@@ -11,6 +11,8 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QDir>
+#include "kvconfig.h"
+#include "classifier.h"
 
 #define IMG_PATH "./image.d"
 #define CFG_PATH "./cfg.d"
@@ -28,18 +30,22 @@ public:
     explicit MainWidget(QWidget *parent = 0);
     ~MainWidget();
 
+protected:
+    bool eventFilter(QObject *, QEvent *);
+
 private slots:
-    void but_who_selected();
-    void but_where_selected();
-    void but_what_selected();
     void undo();
     void but_skipped();
     void but_confused();
 
+    void but_subject_selected();
+    void but_regions_selected();
+    void but_actions_selected();
+    void but_objects_selected();
+    void but_prev();    //
+
 private:
     Ui::MainWidget *ui;
-
-    QString where_, what_, who_;    // 根据这三个构造子目录名字 ...
 
     /// 输入文件列表
     std::deque<QString> img_fnames_;
@@ -47,9 +53,18 @@ private:
     /// 用于支持 undo
     std::stack<QString> undo_list_;
 
-    /// 类别
-    std::vector<std::pair<QString, QString> > catalogs_, catalogs2_;
-    std::vector<QRadioButton*> but_wheres_, but_whats_, but_whos_;
+    //
+    QString subject_, region_, action_, object_;    // 当前选择 ..
+
+    /// 加载模型，尝试在分类之前，先进行预测 ...
+    bool loaded_;
+    Classifier *cf_;
+    bool load_models();
+
+    /// 来自配置文件的分类 ...
+    std::vector<std::pair<QString, QString> > subjects_, regions_, actions_, objects_;
+    std::vector<QRadioButton*> but_regions_, but_actions_, but_subjects_, but_objects_;
+    std::vector<QRadioButton*> *buts_curr_; //
 
     void load_image_fnames();
     std::vector<std::pair<QString, QString> > load_catalogs(const char *fname);
@@ -57,8 +72,9 @@ private:
 
     // 下一张照片，当前照片位于 img_fnames_.front()
     QPixmap *next_image();
-
     QPixmap curr_image_;    // 正在显示的图像 ...
+    std::string curr_fname_;    // 正在显示的图像的文件名字 ..
+    QString pred_result_;       // 预测结果，在 paintEvent 中显示 ..
 
     void enable_buts(std::vector<QRadioButton*> buts, bool enable)
     {
@@ -70,15 +86,19 @@ private:
         }
     }
 
+    void enable_buts();
+
+    void show_buttons();    // 根据当前状态，显示按钮 ...
+
     // 显示
     void show_image(const QPixmap *img);
     void show_curr();
     void show_info();
 
     // 从原始名字转化为分类后的名字
-    QString cataloged_fname(const QString &fname)
+    QString cataloged_filename(const QString &fname, const QString &subdir)
     {
-        if (where_.isEmpty() || what_.isEmpty() || who_.isEmpty()) {
+        if (region_.isEmpty() || action_.isEmpty() || subject_.isEmpty()) {
             throw new std::exception();
         }
 
@@ -86,11 +106,7 @@ private:
         if (pos > 0) {
             QString fs = IMG_PATH;
             fs += '/';
-            fs += where_;
-            fs += '-';
-            fs += what_;
-            fs += '-';
-            fs += who_;
+            fs += subdir;
             fs += '/';
             fs += fname.right(fname.length() - pos - 1);
             return fs;
