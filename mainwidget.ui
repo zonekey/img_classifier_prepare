@@ -60,7 +60,6 @@
                  <property name="title">
                   <string>Actions</string>
                  </property>
-                 <zorder>widget_show</zorder>
                 </widget>
                </item>
                <item>
@@ -76,9 +75,9 @@
               </layout>
              </item>
              <item>
-              <widget class="QLabel" name="label_result">
+              <widget class="QTextBrowser" name="textBrowser_result">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -86,13 +85,13 @@
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>30</height>
+                 <height>50</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>30</height>
+                 <height>90</height>
                 </size>
                </property>
                <property name="font">
@@ -100,9 +99,6 @@
                  <family>Courier New</family>
                  <pointsize>12</pointsize>
                 </font>
-               </property>
-               <property name="text">
-                <string/>
                </property>
               </widget>
              </item>

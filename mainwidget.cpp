@@ -339,7 +339,15 @@ void MainWidget::show_curr()
             std::vector < Prediction > predictions = cf_->Classify(rgb);
 
             pred_result_ = QString("%1(%2)").arg(predictions[0].first.c_str()).arg(predictions[0].second);
-            ui->label_result->setText(pred_result_);
+            pred_result_ += "\n";
+            if (predictions[1].second > 0.05) {
+                pred_result_ += QString("%1(%2)").arg(predictions[1].first.c_str()).arg(predictions[1].second);
+                pred_result_ += "\n";
+                if(predictions[2].second > 0.005) {
+                    pred_result_ += QString("%1(%2)").arg(predictions[2].first.c_str()).arg(predictions[2].second);
+                }
+            }
+            ui->textBrowser_result->setText(pred_result_);
         }
         show_image(img);
         delete img;
@@ -355,6 +363,8 @@ void MainWidget::but_skipped()
     if (img_fnames_.empty()) {
         return;
     }
+
+    subject_.clear(), region_.clear(), action_.clear(), object_.clear();
 
     QString src_fname = img_fnames_.front();
     QString dst_fname = cataloged_fname("skipped", src_fname);
@@ -401,6 +411,8 @@ void MainWidget::but_confused()
     if (img_fnames_.empty()) {
         return;
     }
+
+    subject_.clear(), region_.clear(), action_.clear(), object_.clear();
 
     QString src_fname = img_fnames_.front();
     QString dst_fname = cataloged_fname("confused", src_fname);
@@ -453,6 +465,8 @@ void MainWidget::undo()
     if (undo_list_.empty()) {
         return;
     }
+
+    subject_.clear(), region_.clear(), action_.clear(), object_.clear();
 
     QString src_fname = undo_list_.top();
     QString dst_fname = origin_fname(src_fname);
