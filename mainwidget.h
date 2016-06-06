@@ -55,6 +55,7 @@ private:
 
     //
     QString subject_, region_, action_, object_;    // 当前选择 ..
+    QString last_subject_, last_region_, last_action_, last_object_;
 
     /// 加载模型，尝试在分类之前，先进行预测 ...
     bool loaded_;

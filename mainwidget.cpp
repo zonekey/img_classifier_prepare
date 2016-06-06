@@ -160,6 +160,8 @@ bool MainWidget::load_models()
 bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
 {
     if (evt->type() == QEvent::KeyPress) {
+
+
         if (obj == this) {
             QKeyEvent *keyevt = (QKeyEvent*)evt;
             int key = keyevt->key();
@@ -168,8 +170,22 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *evt)
             if (key >= Qt::Key_0 && key <= Qt::Key_9) {
                 idx = key - '0';
             }
-            else if (key >= Qt::Key_A && key <= Qt::Key_Z) {
+            else if (key >= Qt::Key_A && key <= Qt::Key_M) {
                 idx = key - 'A' + 10;
+            }
+            if (((QKeyEvent*)evt)->key() == Qt::Key_N) {
+                fprintf(stdout, "Space: %p\n", obj);
+    //            QMessageBox *m = new QMessageBox(QMessageBox::NoIcon, "", "enter");
+    //            m->show();
+                // 保持同类，下一张 ...
+                if (last_subject_.isEmpty() || last_region_.isEmpty() || last_action_.isEmpty() || last_object_.isEmpty()) {
+
+                }
+                else {
+                    subject_ = last_subject_, region_ = last_region_, action_ = last_action_, object_ = last_object_;
+                    all_selected();
+                    show_buttons();
+                }
             }
             else if (key == Qt::Key_Backspace) { // 使用退格键作为上一级 ..
                 idx = -2;
@@ -300,7 +316,7 @@ void MainWidget::load_image_fnames()
         img_fnames_.push_back(fname);
     }
 
-    std::random_shuffle(img_fnames_.begin(), img_fnames_.end());
+//    std::random_shuffle(img_fnames_.begin(), img_fnames_.end());
 
     fprintf(stderr, "%lu images fname loaded!\n", img_fnames_.size());
 }
@@ -365,6 +381,10 @@ void MainWidget::but_skipped()
     }
 
     subject_.clear(), region_.clear(), action_.clear(), object_.clear();
+    last_subject_ = subject_;
+    last_region_ = region_;
+    last_action_ = action_;
+    last_object_ = object_;
 
     QString src_fname = img_fnames_.front();
     QString dst_fname = cataloged_fname("skipped", src_fname);
@@ -413,6 +433,11 @@ void MainWidget::but_confused()
     }
 
     subject_.clear(), region_.clear(), action_.clear(), object_.clear();
+    last_subject_ = subject_;
+    last_region_ = region_;
+    last_action_ = action_;
+    last_object_ = object_;
+
 
     QString src_fname = img_fnames_.front();
     QString dst_fname = cataloged_fname("confused", src_fname);
@@ -454,6 +479,11 @@ void MainWidget::all_selected()
     show_curr();
     show_info();
 
+    last_subject_ = subject_;
+    last_region_ = region_;
+    last_action_ = action_;
+    last_object_ = object_;
+
     subject_.clear();
     region_.clear();
     action_.clear();
@@ -467,6 +497,10 @@ void MainWidget::undo()
     }
 
     subject_.clear(), region_.clear(), action_.clear(), object_.clear();
+    last_subject_ = subject_;
+    last_region_ = region_;
+    last_action_ = action_;
+    last_object_ = object_;
 
     QString src_fname = undo_list_.top();
     QString dst_fname = origin_fname(src_fname);
