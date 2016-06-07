@@ -3,3 +3,5 @@
   2. label_txt2json.py 根据 labels.txt 生成 catalogs.json
   3. prepare_samples.py train_val 将生成训练/校验集，如果不带参数，将生成测试集
 
+
+修改 
