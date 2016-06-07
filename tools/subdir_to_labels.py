@@ -8,21 +8,27 @@
 #
 #################################################################
 
-import os
+import os, sys
 
 ''' 根据当前目录下的子目录，生成 labels.txt 文件 '''
 
 ignored = [ 'skipped', 'confused' ]
 
 
+working_dir = "./"
+if len(sys.argv) == 2:
+    working_dir = sys.argv[1]
+
 label = open('labels.txt', 'w')
 
-for fn in os.listdir('./'):
-    if os.path.isdir(fn) and fn not in ignored:
+cnt = 0
+for fn in os.listdir(working_dir):
+    if os.path.isdir(working_dir + '/' + fn) and fn not in ignored:
         label.write(fn + '\n')
+        cnt += 1
 
 label.close()
-
+print cnt, "subdirs added!"
 
 
 
