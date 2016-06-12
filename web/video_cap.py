@@ -42,6 +42,7 @@ class VideoCap(threading.Thread):
 
     def run(self):
         command = ['ffmpeg', 
+                  '-v', '-1',
                   '-i', self.__url, 
                   '-s', str(self.__size[0]) + 'x' + str(self.__size[1]),
                   '-r', self.__rate, 
@@ -54,6 +55,12 @@ class VideoCap(threading.Thread):
         quit = False;
         while not quit:
             raw_image = pipe.stdout.read(self.__size[0] * self.__size[1] * 3) # BGR24
+            if not raw_image:
+                # 播放结束?
+                if self.__callback:
+                    self.__callback(None)
+                break
+
             image = np.fromstring(raw_image, dtype = 'uint8')
             image = image.reshape((self.__size[1], self.__size[0], 3))
     
@@ -61,23 +68,33 @@ class VideoCap(threading.Thread):
                 self.__callback(image)
 
             quit = self.check_quit()
+        
 
 
 
 if __name__ == '__main__':
     import time
     
-    vc = VideoCap("c:/Users/sunkw/Desktop/videos/5.mp4", (256, 256), "1/1")
+    vc = VideoCap("c:/Users/sunkw/Desktop/videos/51.mp4", (256, 256), "1/3")
     
+    cnt = 0
+    quit = False
+
     def cb(image):
-        print image.shape
+        global cnt, quit
+
+        if image is None:
+            print 'End....'
+            quit = True
+        else:
+            cnt += 1
     
     vc.start(cb)
     
-    time.sleep(5.0)
+    while not quit:
+        time.sleep(1.0)
     
-    vc.stop()       
-
+    print cnt, 'images saved!'
 
 
 
