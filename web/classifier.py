@@ -11,6 +11,7 @@
 import caffe
 import numpy as np
 import cv2
+import sys, codecs
 
 
 caffe.set_mode_cpu()    # in windows, only CPU mode supported
@@ -33,10 +34,27 @@ class Classifier:
         ''' 输入图像，输出前 N 类预测结果，以及可信度
              [ ( 3, '单人-讲台区-看-学生区', 0.933), (5, '单人-讲桌-看-学生区', 0.03) ... ]
         '''
-        prediction = self.__net.predict([image])
-        print 'prediction shape:', prediction[0].shape
-        print 'predicted class:', prediction[0].argmax()
-        return prediction
+        prediction = self.__net.predict([image], False)
+        return self.sort_preds(prediction[0])
+
+
+    def sort_preds(self, scores):
+        ''' scores 为 []，为每类的可信度 '''
+        cs = {}
+        c = 0
+        for scors in scores:
+            cs[c] = scors
+            c += 1
+        # cs 根据 value 从大到小排序
+        cs = sorted(cs.iteritems(), key = lambda d:d[1], reverse = True)
+        preds = []
+        for c in cs:
+            if self.__labels and len(self.__labels) > c[0]:
+                label = self.__labels[c[0]]
+            else:
+                label = ""
+            preds.append((c[0], label, c[1]))
+        return preds
 
 
     def load_labels(self, fname):
@@ -47,6 +65,7 @@ class Classifier:
                 line = line.strip()
                 if len(line) > 1:
                     labels.append(line)
+        return labels
 
 
     def convert(self, mean_fname):
@@ -61,17 +80,17 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     image = caffe.io.load_image('1.jpg')
-    plt.imshow(image)
 
     cf = Classifier('../models/deploy.prototxt',
             '../models/pretrained.caffemodel',
             '../models/mean.binaryproto',
             '../models/labels.txt')
-
     pred = cf.predicate(image)
-    plt.plot(pred[0])
 
-    plt.show()
+    # print pred
+    print 'for image:'
+    for i in range(0, 3):
+        print pred[i][1].decode('utf-8').encode('gbk'), pred[i][2]
 
 
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
