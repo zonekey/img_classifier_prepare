@@ -75,7 +75,7 @@ class VideoCap(threading.Thread):
 if __name__ == '__main__':
     import time
     
-    vc = VideoCap("c:/Users/sunkw/Desktop/videos/51.mp4", (256, 256), "1/3")
+    vc = VideoCap("c:/Users/sunkw/Desktop/videos/51.mp4", (256, 256), "25")
     
     cnt = 0
     quit = False

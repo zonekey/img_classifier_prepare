@@ -34,7 +34,7 @@ class Classifier:
         ''' 输入图像，输出前 N 类预测结果，以及可信度
              [ ( 3, '单人-讲台区-看-学生区', 0.933), (5, '单人-讲桌-看-学生区', 0.03) ... ]
         '''
-        prediction = self.__net.predict([image], False)
+        prediction = self.__net.predict([image], False) # 不使用crop/mirror均值
         return self.sort_preds(prediction[0])
 
 
@@ -77,15 +77,13 @@ class Classifier:
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    image = caffe.io.load_image('1.jpg')
-
     cf = Classifier('../models/deploy.prototxt',
             '../models/pretrained.caffemodel',
             '../models/mean.binaryproto',
             '../models/labels.txt')
-    pred = cf.predicate(image)
+
+    image = caffe.io.load_image('1.jpg') # 加载图片 ..
+    pred = cf.predicate(image) # 预测
 
     # print pred
     print 'for image:'
