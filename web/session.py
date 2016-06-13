@@ -78,7 +78,9 @@ class Session(threading.Thread):
 
 
     def build_cmd(self):
-        ''' 从 cfg 构造命令行参数 '''
+        ''' 从 cfg 构造命令行参数, 一般拥有 url, interval, topn '''
+
+        # TODO: 修改为调用老
         command = [ 'python', 't.py' ]
         return command
 

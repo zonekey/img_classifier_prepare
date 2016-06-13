@@ -25,6 +25,7 @@ import numpy as np
 from classifier import Classifier
 from session import Session
 import threading
+import json
 
 
 def cb(opaque, rc):
@@ -58,9 +59,9 @@ class Application(tornado.web.Application):
         pass
 
 
-    def create_session(self, url, interval = 3.0):
+    def create_session(self, url, interval, topn = 3):
         global cb
-        s = Session(cb, self)
+        s = Session(cb, self, url=url, interval=interval, topn=topn)
         sid = self.next_sid()
         self.__sessions[sid] = s
         return sid
@@ -100,7 +101,8 @@ class HelpHandler(tornado.web.RequestHandler):
 
 class CreateSessionHandler(tornado.web.RequestHandler):
     def post(self):
-        sid = self.application.create_session('')
+        j = json.loads(self.request.body)
+        sid = self.application.create_session(url = j['url'], interval = j['interval'], topn = j['topn'])
         rx = { "error": 0, "sessionid": sid, 'host_clock': time.time()}
         self.finish(rx)
 
@@ -166,12 +168,12 @@ class SinglePicture(tornado.web.RequestHandler):
             self.finish(str(e))
 
 
+
 # 仅仅用于单幅图片的分类，对于 url，还是启动独立的工作进程搞吧 ..
-if True:
-    cf = Classifier('../models/deploy.prototxt',
-        '../models/pretrained.caffemodel',
-        '../models/mean.binaryproto',
-        '../models/labels.txt')
+cf = Classifier('../models/deploy.prototxt',
+    '../models/pretrained.caffemodel',
+    '../models/mean.binaryproto',
+    '../models/labels.txt')
 
 
 def main():
