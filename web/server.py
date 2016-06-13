@@ -41,10 +41,16 @@ class Application(tornado.web.Application):
 
         handlers = [
             (r'/', HelpHandler),
+            
             (r'/pic', SinglePicture),
+            
             (r'/stream', CreateSessionHandler),
             (r'/stream/([0-9]+)', DelSessionHandler),
             (r'/stream/([0-9]+)/(.*)', SessionHandler),
+
+            (r'/batch', CreateBatchHandler),
+            (r'/batch/([0-9]+)', DelBatchHandler),
+            (r'/batch/([0-9]+)/(.*)', BatchHandler),
         ]
         tornado.web.Application.__init__(self, handlers)
 
@@ -144,6 +150,28 @@ class SessionHandler(tornado.web.RequestHandler):
                 self.finish(rx)
         else:
             self.finish('ERR: ' + sid + ', unknown cmd:' + cmd)
+
+
+class CreateBatchHandler(tornado.web.RequestHandler):
+    def post(self):
+        # TODO: 
+        self.finish('NOT impl')
+
+
+class DelBatchHandler(tornado.web.RequestHandler):
+    def delete(self, bid):
+        # TODO:
+        self.finish('NOT impl')
+
+
+    def get(self, bid):
+        self.redirect('/batch/' + bid + '/query')
+
+
+class BatchHandler(tornado.web.RequestHandler):
+    def get(self, bid, cmd):
+        # TODO:
+        self.finish('NOT impl')
         
 
 
