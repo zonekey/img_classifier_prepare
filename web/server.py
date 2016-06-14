@@ -65,10 +65,17 @@ class Application(tornado.web.Application):
         pass
 
 
+    def list_sessions(self):
+        ss = []
+        for s in self.__sessions:
+            ss.append(self.__sessions[s].descr())
+        return ss
+
+
     def create_session(self, url, interval, topn = 3):
         global cb
-        s = Session(cb, self, url=url, interval=interval, topn=topn)
         sid = self.next_sid()
+        s = Session(cb, self, sid, url=url, interval=interval, topn=topn)
         self.__sessions[sid] = s
         return sid
 
@@ -110,6 +117,12 @@ class CreateSessionHandler(tornado.web.RequestHandler):
         j = json.loads(self.request.body)
         sid = self.application.create_session(url = j['url'], interval = j['interval'], topn = j['topn'])
         rx = { "error": 0, "sessionid": sid, 'host_clock': time.time()}
+        self.finish(rx)
+
+    def get(self):
+        # FIXME: 列出当前的 session
+        ss = self.application.list_sessions()
+        rx = { 'num': len(ss), 'sessions': ss }
         self.finish(rx)
 
 

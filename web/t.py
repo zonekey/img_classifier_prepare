@@ -19,11 +19,11 @@ topn = 3
 
 
 try:
-    url = sys.args[1]
-    interval = float(sys.args[2])
-    topn = int(sys.args[3])
+    url = sys.argv[1]
+    interval = float(sys.argv[2])
+    topn = int(sys.argv[3])
 except:
-    print 'usage', sys.args[0], ' <url> <interval> <topn>'
+    print 'usage', sys.argv[0], ' <url> <interval> <topn>'
     sys.exit()
 
 
@@ -45,7 +45,7 @@ curr_encoding = locale.getdefaultlocale()[1]
 def cb_image(image):
     global cf, quit, stamp_begin
 
-    if image == None:
+    if image is None:
         quit = True
         return
    
@@ -55,7 +55,9 @@ def cb_image(image):
     pred = cf.predicate(image)
     stamp = time.time() - stamp_begin
 
-    print stamp, pr(pred[0][1]), pred[0][2], pr(pred[1][1]), pred[1][2], pr(pred[2][1]), pred[2][2]
+    # FIXME: 使用 'CR:' 作为一条分析结果的前缀，解析起来更方便 :)
+    print "CR:", stamp, pr(pred[0][1]), pred[0][2], pr(pred[1][1]), pred[1][2], pr(pred[2][1]), pred[2][2]
+    sys.stdout.flush()
 
 
 def pr(s):
@@ -67,7 +69,7 @@ quit = False
 vc.start(cb_image)
 
 while not quit:
-    time.sleep(1.0)
+    time.sleep(0.5)
 
 vc.stop()
 
