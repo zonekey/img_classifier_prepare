@@ -80,7 +80,6 @@ class Session(threading.Thread):
                 break       # 进程结束 ..
 
             line = line.strip()
-            print '==>', line
 
             if len(line) < 10:
                 continue

@@ -14,11 +14,15 @@ import cv2
 import sys, codecs
 
 
-caffe.set_mode_cpu()    # in windows, only CPU mode supported
 
 
 class Classifier:
-    def __init__(self, deploy, pretrained, mean, labels):
+    def __init__(self, deploy, pretrained, mean, labels, gpu = False):
+        if gpu:
+            caffe.set_mode_gpu()
+        else:
+            caffe.set_mode_cpu()    # in windows, only CPU mode supported
+
         self.__labels = self.load_labels(labels);
         mean_ar = self.convert(mean)
         print mean_ar.shape

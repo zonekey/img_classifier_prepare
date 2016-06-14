@@ -59,6 +59,13 @@ class Application(tornado.web.Application):
         self.__next_sid += 1
         return str(self.__next_sid)
 
+    
+    def get_session(self, sid):
+        if sid in self.__sessions:
+            return self.__sessions[sid]
+        else:
+            return None
+        
 
     def cb(self, rc):
         #print rc
@@ -128,14 +135,25 @@ class CreateSessionHandler(tornado.web.RequestHandler):
 
 class DelSessionHandler(tornado.web.RequestHandler):
     def get(self, sid):
-        self.redirect('/stream/' + sid + '/query')
+        # 返回 sid 对应的描述 ...
+        s = self.application.get_session(sid)
+        if s is None:
+            self.clear()
+            self.set_status(404)
+            self.finish('<html><body> sessionid {} NOT found!</body></html>'.format(sid))
+        else:
+            self.finish(s.descr())
+
 
     def delete(self, sid):
         rx = { "error": 0, "sessionid": sid }
         rc = self.application.destory_session(sid)
         if not rc:
-            rx['error'] = -1
-        self.finish(rx)
+            self.clear()
+            self.set_status(404)
+            self.finish('<html><body> sessionid {} NOT found!</body></html>'.format(sid))
+        else:
+            self.finish(rx)
 
 
 class SessionHandler(tornado.web.RequestHandler):
@@ -146,7 +164,9 @@ class SessionHandler(tornado.web.RequestHandler):
 
             rcs = self.application.query_session(sid, begin, end)
             if rcs is None:
-                self.finish('ERR: ' + sid + ', NO the session')
+                self.clear()
+                self.set_status(404)
+                self.finish('<html><body> sessionid {} NOT found!</body></html>'.format(sid))
             else:
                 rx = { 'state': '', 'results': [] }
                 for rc in rcs:
@@ -162,7 +182,9 @@ class SessionHandler(tornado.web.RequestHandler):
                     rx['state'] = 'stopped'
                 self.finish(rx)
         else:
-            self.finish('ERR: ' + sid + ', unknown cmd:' + cmd)
+            self.clear()
+            self.set_status(400)
+            self.finish('<html><body> unknown command <b>{}</b> </body></html>'.format(cmd))
 
 
 class CreateBatchHandler(tornado.web.RequestHandler):
@@ -214,7 +236,7 @@ class SinglePicture(tornado.web.RequestHandler):
 cf = Classifier('../models/deploy.prototxt',
     '../models/pretrained.caffemodel',
     '../models/mean.binaryproto',
-    '../models/labels.txt')
+    '../models/labels.txt', gpu=True)
 
 
 def main():
