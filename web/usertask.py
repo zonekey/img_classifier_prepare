@@ -41,60 +41,62 @@ class UserTask:
             return default
 
     
-    def next_image(self, mid):
+    def next_image(self):
         ''' 返回用户相关的，对应 mid 目录下的下一张为分类的图片名字 '''
         if self.__pending_img_fname is None:
-            # 从 img_path 中找到一张没有标定过的图片
-            self.__pending_img_fname = self.next_uncf_image(mid)
+            self.__pending_img_fname = self.next_uncf_image()
         return self.__pending_img_fname
 
 
-    def save_image_result(self, mid, fname, label):
+    def save_image_result(self, fname, label, title):
         ''' 将 fname 对应的 label 保存到数据库中 '''
         if fname == self.__pending_img_fname:
             self.__pending_img_fname = None
 
         self.__undo.append(fname)
-        conn = sq.connect(self.db_name(mid))
-        cmd = 'update img set label = {} where fname = "{}"'.format(label, fname)
+        conn = sq.connect(self.db_name())
+        cmd = 'update img set label = {},title="{}" where fname = "{}"'.format(label, title, fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()
 
 
-    def cancel(self, mid):
+    def cancel(self):
         ''' 将 fname 对应的 label 置为 -1 '''
         if len(self.__undo) == 0:
             return
         fname = self.__undo.pop()
         self.__pending_img_fname = None
-        conn = sq.connect(self.db_name(mid))
-        cmd = 'update img set label = -1,who="." where fname = "{}"'.format(fname)
+        conn = sq.connect(self.db_name())
+        cmd = 'update img set label=-1,title="." where fname = "{}"'.format(fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()
 
 
-    def db_name(self, mid):
-        ''' 每个 mid 对应一个数据库 
-            数据库在分解图片时，已经创建，格式为 fname(char), label(int), who(char)
+    def db_name(self):
         '''
-        return self.__imgs_root + '/' + mid + '/label.db'
+            数据库在分解图片时，已经创建，格式为 fname(char), label(int), title(char), who(char)
+        '''
+        return self.__imgs_root + '/labels.db'
 
 
-    def img_path(self, mid):
-        return self.__imgs_root + '/' + mid + '/'
+    def next_uncf_image(self):
+        ''' 返回数据库中，label = -1，并且“无主” 的记录，选择后，update who
+            优先返回 who = user 的 label = -1 的记录
+        '''
 
-
-    def next_uncf_image(self, mid):
-        ''' 返回数据库中，label = -1，并且“无主” 的记录，选择后，update who '''
-        conn = sq.connect(self.db_name(mid))
-        cmd = 'select fname from img where label = -1 and who = "."'
+        conn = sq.connect(self.db_name())
+        cmd = 'select fname from img where label = -1 and who = "{}"'.format(self.__user)
         cursor = conn.execute(cmd)
         fs = cursor.fetchone()
         if fs is None:
-            conn.close()
-            return None
+            cmd = 'select fname from img where label = -1 and who = "."'
+            cursor = conn.execute(cmd)
+            fs = cursor.fetchone()
+            if fs is None:
+                conn.close()
+                return None
         
         fname = fs[0]
         cmd = 'update img set who = "{}" where fname = "{}"'.format(self.__user, fname)

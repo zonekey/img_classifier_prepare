@@ -58,22 +58,15 @@ class Media2Image(threading.Thread):
 
     def prepare_db(self):
         ''' 准备数据库 '''
-        dbname = self.__out + '/label.db'
+        dbname = self.__out + '/../labels.db'  # 上一级目录 ..
         db = sq.connect(dbname)
-        try:
-            db.execute('''CREATE TABLE img
-                    (fname  CHAR(255),
-                     label  INT,
-                     who CHAR(255));''')   # fname 对应文件的绝对路径，label 用于保存分类，who 登录user
-        except:
-            pass
 
         # 列出 mid 下所有 .jpg，添加到数据库中
         for fn in os.listdir(self.__out):
             x, ext = os.path.splitext(fn)
             if ext != '.jpg':
                 continue
-            cmd = 'insert into img values ("{}",-1,".")'.format(self.__out + '/' + fn)
+            cmd = 'insert into img values ("{}",-1,".",".")'.format(self.__out + '/' + fn)
             db.execute(cmd)
 
         db.commit()

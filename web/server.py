@@ -27,7 +27,7 @@ from session import Session
 from media2image import Media2Image
 import threading
 import json
-import sqlite3 as sql3
+import caffe
 from usertask import UserTask
 
 
@@ -42,16 +42,20 @@ class Application(tornado.web.Application):
         self.__mis = {} # 保存正在进行的转换进程 ..
         self.__next_sid = 0
         self.__lock = threading.Lock()
+
         if sys.platform.find('win32') == 0:
             self.__mis_root = "c:/store/imgs" # 存储转换后的图片 ..
         else:
-            self.__mis_root = "/tmp/imgs"
+            home = os.getenv('HOME')
+            self.__mis_root = home + '/store/imgs'
         self.__users = {}
 
-        try:
-            os.mkdir(self.__mis_root)
-        except:
-            pass
+
+        os.system('mkdir -p ' + self.__mis_root)
+
+        # 准备数据库 ...
+        self.prepare_db()
+
 
         handlers = [
             (r'/', HelpHandler),
@@ -70,16 +74,30 @@ class Application(tornado.web.Application):
 
             (r'/retrain', RetrainIndexHandler),
             (r'/retrain/media2image', RetrainMedia2ImageHandler),
-            (r'/retrain/([^/]+)', RetrainShowingHandler),
-            (r'/retrain/([^/]+)/next', RetrainNextImageHandler),    # 获取下一张图片的分类结果 ..
-            (r'/retrain/([^/]+)/confirm', RetrainImageCfHandler),   # 确认分类结果，PUT
-            (r'/retrain/([^/]+)/cancel', RetrainImageCancelHandler),  # 撤销
+            (r'/retrain/cf', RetrainShowingHandler),
+            (r'/retrain/api/next', RetrainNextImageHandler),    # 获取下一张图片的分类结果 ..
+            (r'/retrain/api/confirm', RetrainImageCfHandler),   # 确认分类结果，PUT
+            (r'/retrain/api/cancel', RetrainImageCancelHandler),  # 撤销
 
-            (r'/imgs/(.*)', tornado.web.StaticFileHandler, {'path': 'c:/store/imgs'} ), # 图片文件..
+            (r'/imgs/(.*)', tornado.web.StaticFileHandler, {'path': self.__mis_root } ), # 图片文件..
 
             (r'/get_labels', GetClassifierLabelsHandler),  # 返回所有的标签，json
         ]
         tornado.web.Application.__init__(self, handlers, cookie_secret="abcd")
+
+
+    def prepare_db(self):
+        ''' 在 self.__mis_root 下创建 labels.db，格式为：
+                fname: 完整的文件路径名
+                label: int
+                title: label 的说明
+                who: 登录者
+        '''
+        import sqlite3 as sq
+        conn = sq.connect(self.__mis_root + '/labels.db')
+        cmd = 'create table if not exists img (fname char(255),label int,title char(255),who char(128));'
+        conn.execute(cmd)
+        conn.close()
 
 
     def get_user(self, who):
@@ -92,21 +110,23 @@ class Application(tornado.web.Application):
             return user
 
 
-    def next_image(self, mid, user):
+    def next_image(self, user):
         ut = self.get_user(user)
-        return ut.next_image(mid)
+        return ut.next_image()
 
 
-    def save_cf_result(self, mid, key, label, user):
+    def save_cf_result(self, key, label, user):
         ''' 保存标定结果 '''
         ut = self.get_user(user)
-        ut.save_image_result(mid, key, label)
+        global cf
+        title = cf.title(int(label))
+        ut.save_image_result(key, label, title)
 
 
-    def cancel_last(self, mid, user):
+    def cancel_last(self, user):
         ''' 撤销最后的保存 '''
         ut = self.get_user(user)
-        ut.cancel(mid)
+        ut.cancel()
 
 
     def next_sid(self):
@@ -227,6 +247,8 @@ class RetrainIndexHandler(BaseRequest):
         fname = self.get_argument('file_name')
         path = self.get_argument('store_path')
         print fname, path
+        # FIXME: 因为 fname 可能包含非安全 url 字符，直接使用 path 的文件名部分吧
+        fname = os.path.basename(path)
         mid = self.application.create_media2image(fname, path)
         self.render('media2image.html', fname = path, sname = fname)
 
@@ -248,21 +270,22 @@ class RetrainMedia2ImageHandler(BaseRequest):
 
 
 class RetrainShowingHandler(BaseRequest):
-    def get(self, mid):
+    def get(self):
         if not self.current_user:
             self.redirect("login" + "?loc=" + self.request.uri)
             return
 
-        self.render('showing.html', mid = mid)
+        self.render('showing.html')
 
 
 class RetrainNextImageHandler(BaseRequest):
-    def get(self, mid):
+    def get(self):
         if not self.current_user:
             self.redirect("login" + "?loc=" + self.request.uri)
             return
 
-        fname = self.application.next_image(mid, self.current_user)
+        fname = self.application.next_image(self.current_user)
+        print fname
         if fname is None:
             self.finish('None')
         else:
@@ -275,7 +298,7 @@ class RetrainNextImageHandler(BaseRequest):
 
                 # 预测结果，返回 { 'url': basefname, 'pred': xxxx }
                 global cf
-                img = cv.imread(fname)
+                img = caffe.io.load_image(fname) # 加载图片 ..
                 pred = cf.predicate(img)
                 rx = { 'url': basefname,    #
                        'label': str(pred[0][0]),
@@ -290,7 +313,7 @@ class RetrainNextImageHandler(BaseRequest):
 
 
 class RetrainImageCfHandler(BaseRequest):
-    def put(self, mid):
+    def put(self):
         ''' body 为 json 格式，key 为文件名（对应数据库中的 fname），
             label 为对应的类别 ...
         '''
@@ -299,19 +322,19 @@ class RetrainImageCfHandler(BaseRequest):
         label = j['label']
         user = self.current_user
 
-        print 'confirmed:', key, label, user, mid
+        print 'confirmed:', key, label, user
 
-        self.application.save_cf_result(mid, key, label, user)
+        self.application.save_cf_result(key, label, user)
         self.finish('OK')
 
 
 class RetrainImageCancelHandler(BaseRequest):
-    def put(self, mid):
+    def put(self):
         ''' 撤销最后的选择 ...'''
         user = self.current_user
 
-        print 'undo:', user, mid
-        self.application.cancel_last(mid, user)
+        print 'undo:', user
+        self.application.cancel_last(user)
         self.finish('OK')
 
 

@@ -13,7 +13,7 @@
 
             // 获取下一张图片名字，显示
             req = new XMLHttpRequest();
-            req.open('GET', '/retrain/{{mid}}/next', false);
+            req.open('GET', '/retrain/api/next', false);
             req.send();
 
             res = req.responseText;
@@ -51,7 +51,7 @@
 			index = document.getElementById('all_labels').selectedIndex;
 
             req = new XMLHttpRequest();
-            req.open('PUT', '/retrain/{{mid}}/confirm', false);
+            req.open('PUT', '/retrain/api/confirm', false);
             req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
             req.send('{"key":"' + document.getElementById('key').innerHTML + '", "label":"' + index.toString() + '"}');
 
@@ -62,7 +62,7 @@
         {
             // 重新标定前一帧 ..
             req = new XMLHttpRequest();
-			req.open('PUT', '/retrain/{{mid}}/cancel', false);
+			req.open('PUT', '/retrain/api/cancel', false);
 			req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
             req.send()
 
@@ -90,7 +90,7 @@
 </head>
 <body onload='load_next_image()'>
     <div id='image'>
-        <img src='' id='img' alt='loading' width='480px' height='270px'>
+        <img src='' id='img' alt='loading' width='640px' height='360px'>
         </img>
 
         <p>
@@ -102,9 +102,11 @@
 
 
     <hr/>
+    <div id='debug' >
         <b>调试信息</b>
        <br> <div id='key'></div> &nbsp; <div id='label'></div>
-    <hr/>
+        <hr/>
+    </div>
 
     <div id='buttons'>
         <input type='button' value='正确，下一张' onclick="confirm_curr()" width="100px" height="40px"/>
