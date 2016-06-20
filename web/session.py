@@ -30,8 +30,13 @@ class Session(threading.Thread):
         self.__proc = None
         self.__started = threading.Event()
         self.__cfg = {}
+        self.__lock = threading.Lock()
+        self.__notify_url = None
         for key in kwargs:
             self.__cfg[key] = kwargs[key]
+            if key == 'notify_url':
+                self.__notify_url = kwargs[key]
+
         self.start()
         self.__started.wait()
 
@@ -76,11 +81,12 @@ class Session(threading.Thread):
         while not quit:
             line = pipe.stdout.readline()
             if not line:
-                self.__proc = None
-                break       # 进程结束 ..
+                # FIXME: 进程结束，仅仅此种情况下，主动通知 ..
+                if self.__notify_url:
+                    notify()
+                break
 
             line = line.strip()
-
             if len(line) < 10:
                 continue
 
@@ -89,16 +95,26 @@ class Session(threading.Thread):
                 ss = line.split()
                 if len(ss) == 8:
                     rc = { 'stamp': float(ss[1]), 
-                           'rc': [
-                                   ( self.rp(ss[2]), float(ss[3])),
-                                   ( self.rp(ss[4]), float(ss[5])),
-                                   ( self.rp(ss[6]), float(ss[7]))
+                           'cf': [
+                                    { 'title': self.rp(ss[2]), 'score': float(ss[3]) },
+                                    { 'title': self.rp(ss[4]), 'score': float(ss[5]) },
+                                    { 'title': self.rp(ss[6]), 'score': float(ss[7]) },
                            ] 
                     }
+
+                    self.__lock.acquire()
                     self.__result.append(rc)
+                    self.__lock.release()
+
                     if self.__cb:
                         self.__cb(self.__opaque, rc)
-        print 'working thread end'
+
+        self.__proc = None
+
+
+    def notify(self):
+        # TODO: 任务已经完成，主动通知到 notify_url
+        pass
 
 
     def rp(self, s):
@@ -107,10 +123,10 @@ class Session(threading.Thread):
 
 
     def build_cmd(self):
-        ''' 从 cfg 构造命令行参数, 一般拥有 url, interval, topn '''
+        ''' 从 cfg 构造命令行参数, 一般拥有 url, interval '''
 
-        # TODO: 修改为调用老
-        command = [ 'python', 't.py', self.__cfg['url'], str(self.__cfg['interval']), str(self.__cfg['topn']) ]
+        # TODO: 修改为调用老刘的c++版本
+        command = [ 'python', 't.py', self.__cfg['url'], str(self.__cfg['interval']) ]
         return command
 
 
@@ -122,15 +138,16 @@ class Session(threading.Thread):
             except Exception as e:
                 print e
         self.join()
-        print 'session closed'
 
 
     def results(self, begin, end = sys.float_info.max):
         ''' 返回 begin 到 end 之间的时间戳 '''
         rcs = []
+        self.__lock.acquire()
         for rc in self.__result:
             if rc['stamp'] >= begin and rc['stamp'] < end:
                 rcs.append(rc)
+        self.__lock.release()
         return rcs
 
 

@@ -15,21 +15,18 @@ import locale
 
 url = ''
 interval = 3.0
-topn = 3
 
 
 try:
     url = sys.argv[1]
     interval = float(sys.argv[2])
-    topn = int(sys.argv[3])
 except:
-    print 'usage', sys.argv[0], ' <url> <interval> <topn>'
+    print 'usage', sys.argv[0], ' <url> <interval>'
     sys.exit()
 
 
 print 'url', url
 print 'interval', interval
-print 'topn', topn
 
 stamp_begin = -1.0
 

@@ -15,7 +15,6 @@ import sys, codecs
 
 
 
-
 class Classifier:
     def __init__(self, deploy, pretrained, mean, labels, gpu = False):
         if gpu:
@@ -70,6 +69,10 @@ class Classifier:
                 if len(line) > 1:
                     labels.append(line)
         return labels
+
+
+    def get_labels(self):
+        return self.__labels
 
 
     def convert(self, mean_fname):

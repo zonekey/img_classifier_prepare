@@ -24,8 +24,11 @@ import cv2 as cv
 import numpy as np
 from classifier import Classifier
 from session import Session
+from media2image import Media2Image
 import threading
 import json
+import sqlite3 as sql3
+from usertask import UserTask
 
 
 def cb(opaque, rc):
@@ -36,11 +39,23 @@ class Application(tornado.web.Application):
     def __init__(self):
         self.__sessions = {} # 保存 sessions
         self.__batchs = {} # 保存批处理 ..
+        self.__mis = {} # 保存正在进行的转换进程 ..
         self.__next_sid = 0
         self.__lock = threading.Lock()
+        if sys.platform.find('win32') == 0:
+            self.__mis_root = "c:/store/imgs" # 存储转换后的图片 ..
+        else:
+            self.__mis_root = "/tmp/imgs"
+        self.__users = {}
+
+        try:
+            os.mkdir(self.__mis_root)
+        except:
+            pass
 
         handlers = [
             (r'/', HelpHandler),
+            (r'/login', LoginHandler),
             
             (r'/pic', SinglePicture),
             
@@ -51,8 +66,47 @@ class Application(tornado.web.Application):
             (r'/batch', CreateBatchHandler),
             (r'/batch/([0-9]+)', DelBatchHandler),
             (r'/batch/([0-9]+)/(.*)', BatchHandler),
+
+
+            (r'/retrain', RetrainIndexHandler),
+            (r'/retrain/media2image', RetrainMedia2ImageHandler),
+            (r'/retrain/([^/]+)', RetrainShowingHandler),
+            (r'/retrain/([^/]+)/next', RetrainNextImageHandler),    # 获取下一张图片的分类结果 ..
+            (r'/retrain/([^/]+)/confirm', RetrainImageCfHandler),   # 确认分类结果，PUT
+            (r'/retrain/([^/]+)/cancel', RetrainImageCancelHandler),  # 撤销
+
+            (r'/imgs/(.*)', tornado.web.StaticFileHandler, {'path': 'c:/store/imgs'} ), # 图片文件..
+
+            (r'/get_labels', GetClassifierLabelsHandler),  # 返回所有的标签，json
         ]
-        tornado.web.Application.__init__(self, handlers)
+        tornado.web.Application.__init__(self, handlers, cookie_secret="abcd")
+
+
+    def get_user(self, who):
+        ''' 用于存储 user 相关的 '''
+        if who in self.__users:
+            return self.__users[who]
+        else:
+            user = UserTask(who, self.__mis_root)
+            self.__users[who] = user
+            return user
+
+
+    def next_image(self, mid, user):
+        ut = self.get_user(user)
+        return ut.next_image(mid)
+
+
+    def save_cf_result(self, mid, key, label, user):
+        ''' 保存标定结果 '''
+        ut = self.get_user(user)
+        ut.save_image_result(mid, key, label)
+
+
+    def cancel_last(self, mid, user):
+        ''' 撤销最后的保存 '''
+        ut = self.get_user(user)
+        ut.cancel(mid)
 
 
     def next_sid(self):
@@ -79,10 +133,10 @@ class Application(tornado.web.Application):
         return ss
 
 
-    def create_session(self, url, interval, topn = 3):
+    def create_session(self, url, interval, notify_url):
         global cb
         sid = self.next_sid()
-        s = Session(cb, self, sid, url=url, interval=interval, topn=topn)
+        s = Session(cb, self, sid, url = url, interval = interval, notify_url = notify_url)
         self.__sessions[sid] = s
         return sid
 
@@ -112,6 +166,153 @@ class Application(tornado.web.Application):
         s = self.__sessions[sid]
         return s.is_running()
 
+    
+    def create_media2image(self, mid, fname):
+        dst_path = self.__mis_root + '/' + mid
+        try:
+            os.mkdir(dst_path)
+        except:
+            pass
+
+        mi = Media2Image(fname, (256, 256), 0.333, dst_path)
+        self.__mis[mid] = mi
+
+        return mi
+
+
+    def get_media2image(self, mid):
+        if mid in self.__mis:
+            return self.__mis[mid]
+        else:
+            return None
+
+
+    def destroy_media2image(self, mid):
+        mi = self.get_media2image(mid)
+        if mi is not None:
+            mi.stop()
+            del self.__mis[mid]
+
+
+
+class BaseRequest(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie('user')
+
+
+class LoginHandler(BaseRequest):
+    def get(self):
+        loc = self.get_query_argument('loc', '/')
+        self.write('<html><body><form action="/login" method="post">'
+                'Name: <input type="text" name="name">'
+                '<input type="submit" value="Sign in">'
+                '<input type="hidden" name="loc" value="' + loc + '">'
+                '</form></body></html>')
+
+    def post(self):
+        self.set_secure_cookie('user', self.get_argument('name'))
+        self.redirect(self.get_argument('loc'))
+
+
+class RetrainIndexHandler(BaseRequest):
+    def get(self):
+        if not self.current_user:
+            self.redirect("/login" + "?loc=" + self.request.uri)
+            return
+        self.render('retrain_index.html')
+
+    def post(self):
+        ''' 总是来自 nginx 的 /after_upload，此时文件已经存储，
+        '''
+        fname = self.get_argument('file_name')
+        path = self.get_argument('store_path')
+        print fname, path
+        mid = self.application.create_media2image(fname, path)
+        self.render('media2image.html', fname = path, sname = fname)
+
+
+class RetrainMedia2ImageHandler(BaseRequest):
+    def get(self):
+        if not self.current_user:
+            self.redirect("login" + "?loc=" + self.request.uri)
+            return
+
+        mid = self.get_query_argument('mid')
+        mi = self.application.get_media2image(mid)
+        frames = mi.frames()    # 已经转换的帧数 ..
+        if mi.is_finished():
+            self.application.destroy_media2image(mi)
+            self.finish("finished " + str(frames))
+        else:
+            self.finish("running " + str(frames))
+
+
+class RetrainShowingHandler(BaseRequest):
+    def get(self, mid):
+        if not self.current_user:
+            self.redirect("login" + "?loc=" + self.request.uri)
+            return
+
+        self.render('showing.html', mid = mid)
+
+
+class RetrainNextImageHandler(BaseRequest):
+    def get(self, mid):
+        if not self.current_user:
+            self.redirect("login" + "?loc=" + self.request.uri)
+            return
+
+        fname = self.application.next_image(mid, self.current_user)
+        if fname is None:
+            self.finish('None')
+        else:
+            # fname 为绝对路径，转换为 /imgs/mid/xxx 格式
+            pos = fname.find('/imgs/')
+            if pos == -1:
+                self.finish('None')
+            else:
+                basefname = fname[pos:]
+
+                # 预测结果，返回 { 'url': basefname, 'pred': xxxx }
+                global cf
+                img = cv.imread(fname)
+                pred = cf.predicate(img)
+                rx = { 'url': basefname,    #
+                       'label': str(pred[0][0]),
+                       'key': fname,        # 当确认是，需要更新数据库 ..
+                       'pred': {
+                            'top1': '{} {}'.format(pred[0][1], pred[0][2]),
+                            'top2': '{} {}'.format(pred[1][1], pred[1][2]),
+                            'top3': '{} {}'.format(pred[2][1], pred[2][2]),
+                       },
+                }
+                self.finish(rx)
+
+
+class RetrainImageCfHandler(BaseRequest):
+    def put(self, mid):
+        ''' body 为 json 格式，key 为文件名（对应数据库中的 fname），
+            label 为对应的类别 ...
+        '''
+        j = json.loads(self.request.body)
+        key = j['key']
+        label = j['label']
+        user = self.current_user
+
+        print 'confirmed:', key, label, user, mid
+
+        self.application.save_cf_result(mid, key, label, user)
+        self.finish('OK')
+
+
+class RetrainImageCancelHandler(BaseRequest):
+    def put(self, mid):
+        ''' 撤销最后的选择 ...'''
+        user = self.current_user
+
+        print 'undo:', user, mid
+        self.application.cancel_last(mid, user)
+        self.finish('OK')
 
 
 class HelpHandler(tornado.web.RequestHandler):
@@ -119,15 +320,29 @@ class HelpHandler(tornado.web.RequestHandler):
         self.render('help.html')
 
 
+class GetClassifierLabelsHandler(tornado.web.RequestHandler):
+    def get(self):
+        global cf
+        labels = cf.get_labels()
+
+        # 整理为 json 格式
+        self.finish({'labels': labels})
+
 class CreateSessionHandler(tornado.web.RequestHandler):
     def post(self):
         j = json.loads(self.request.body)
-        sid = self.application.create_session(url = j['url'], interval = j['interval'], topn = j['topn'])
+        url = j['url']
+        interval = j['interval']
+        if 'notify_url' in j:
+            notify_url = j['notify_url']
+        else:
+            notify_url = None
+        sid = self.application.create_session(url = j['url'], interval = interval, notify_url = notify_url)
         rx = { "error": 0, "sessionid": sid, 'host_clock': time.time()}
         self.finish(rx)
 
     def get(self):
-        # FIXME: 列出当前的 session
+        # 列出当前的 session
         ss = self.application.list_sessions()
         rx = { 'num': len(ss), 'sessions': ss }
         self.finish(rx)
@@ -168,14 +383,7 @@ class SessionHandler(tornado.web.RequestHandler):
                 self.set_status(404)
                 self.finish('<html><body> sessionid {} NOT found!</body></html>'.format(sid))
             else:
-                rx = { 'state': '', 'results': [] }
-                for rc in rcs:
-                    descr = { 'stamp': rc['stamp'], \
-                        'top1': rc['rc'][0][0], 'score1': rc['rc'][0][1], \
-                        'top2': rc['rc'][1][0], 'score2': rc['rc'][1][1], \
-                        'top3': rc['rc'][2][0], 'score3': rc['rc'][2][1], }
-                    rx['results'].append(descr)
-    
+                rx = { 'state': '', 'results': rcs }
                 if self.application.is_running(sid):
                     rx['state'] = 'running'
                 else:
@@ -222,10 +430,11 @@ class SinglePicture(tornado.web.RequestHandler):
             img = Image.open(StringIO.StringIO(body))
             img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
             pred = cf.predicate(img)
-            info = ""
+            rx = { "result": [] }
             for i in range(0, 3):
-                info += pred[i][1] + ', score:' + str(pred[i][2]) + '\n'
-            self.finish(info)
+                r = { 'title': pred[i][1], 'score': float(pred[i][2]) }
+                rx['result'].append(r)
+            self.finish(rx)
         except Exception as e:
             print e
             self.finish(str(e))
@@ -236,7 +445,7 @@ class SinglePicture(tornado.web.RequestHandler):
 cf = Classifier('../models/deploy.prototxt',
     '../models/pretrained.caffemodel',
     '../models/mean.binaryproto',
-    '../models/labels.txt', gpu=True)
+    '../models/labels.txt', gpu=False)
 
 
 def main():
