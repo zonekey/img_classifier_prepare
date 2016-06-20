@@ -48,6 +48,15 @@ class UserTask:
         return self.__pending_img_fname
 
 
+    def save_image_pred_result(self, fname, label):
+        ''' 保存预测结果 '''
+        conn = sq.connect(self.db_name())
+        cmd = 'update img set pred_label={} where fname="{}"'.format(label, fname)
+        conn.execute(cmd)
+        conn.commit()
+        conn.close()
+
+
     def save_image_result(self, fname, label, title):
         ''' 将 fname 对应的 label 保存到数据库中 '''
         if fname == self.__pending_img_fname:
@@ -55,7 +64,7 @@ class UserTask:
 
         self.__undo.append(fname)
         conn = sq.connect(self.db_name())
-        cmd = 'update img set label = {},title="{}" where fname = "{}"'.format(label, title, fname)
+        cmd = 'update img set label={},title="{}" where fname = "{}"'.format(label, title, fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()

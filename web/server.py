@@ -89,13 +89,14 @@ class Application(tornado.web.Application):
     def prepare_db(self):
         ''' 在 self.__mis_root 下创建 labels.db，格式为：
                 fname: 完整的文件路径名
+                pred_label: int
                 label: int
                 title: label 的说明
                 who: 登录者
         '''
         import sqlite3 as sq
         conn = sq.connect(self.__mis_root + '/labels.db')
-        cmd = 'create table if not exists img (fname char(255),label int,title char(255),who char(128));'
+        cmd = 'create table if not exists img (fname char(255),pred_label int, label int,title char(255),who char(128));'
         conn.execute(cmd)
         conn.close()
 
@@ -300,6 +301,7 @@ class RetrainNextImageHandler(BaseRequest):
                 global cf
                 img = caffe.io.load_image(fname) # 加载图片 ..
                 pred = cf.predicate(img)
+                self.application.get_user(self.current_user).save_image_pred_result(fname, pred[0][0])
                 rx = { 'url': basefname,    #
                        'label': str(pred[0][0]),
                        'key': fname,        # 当确认是，需要更新数据库 ..

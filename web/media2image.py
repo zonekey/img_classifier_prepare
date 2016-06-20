@@ -66,7 +66,7 @@ class Media2Image(threading.Thread):
             x, ext = os.path.splitext(fn)
             if ext != '.jpg':
                 continue
-            cmd = 'insert into img values ("{}",-1,".",".")'.format(self.__out + '/' + fn)
+            cmd = 'insert into img values ("{}",-1,-1,".",".")'.format(self.__out + '/' + fn)
             db.execute(cmd)
 
         db.commit()
