@@ -93,14 +93,18 @@ class UserTask:
     def next_uncf_image(self):
         ''' 优先返回 who = user 的 label = -1 的记录，如果自己上传的都标定完成了，则
             返回其他人的 label = -1 的记录 ...，并改为自己的名字 ..
+
+            多个人同时标定时，有问题：
+                一个人预选了一张图片，但另一个标完自己图片的人，有可能会选择相同的文件。
+            但这样似乎问题也不大，总是记录最后一个人的标定结果和名字 ...
         '''
 
         conn = sq.connect(self.db_name())
-        cmd = 'select fname from img where label = -1 and who = "{}" order by fname;'.format(self.__user)
+        cmd = 'select fname from img where label = -2 and who = "{}" order by fname desc;'.format(self.__user)
         cursor = conn.execute(cmd)
         fs = cursor.fetchone()
         if fs is None:
-            cmd = 'select fname from img where label = -1 order by fname;'
+            cmd = 'select fname from img where label = -1 order by fname desc;'
             cursor = conn.execute(cmd)
             fs = cursor.fetchone()
             if fs is None:

@@ -371,7 +371,7 @@ class RetrainImageCancelHandler(BaseRequest):
 
 class HelpHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render('help.html')
+        self.render('index.html')
 
 
 class GetClassifierLabelsHandler(tornado.web.RequestHandler):
