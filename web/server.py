@@ -339,9 +339,9 @@ class RetrainNextImageHandler(BaseRequest):
                        'label': str(pred[0][0]),
                        'key': fname,        # 当确认是，需要更新数据库 ..
                        'pred': {
-                            'top1': '{} {}'.format(pred[0][1], pred[0][2]),
-                            'top2': '{} {}'.format(pred[1][1], pred[1][2]),
-                            'top3': '{} {}'.format(pred[2][1], pred[2][2]),
+                           'top1': pred[0][1], 'score1': str(pred[0][2]),
+                           'top2': pred[1][1], 'score2': str(pred[1][2]),
+                           'top3': pred[2][1], 'score3': str(pred[2][2]),
                        },
                        'title': pred[0][1],
                 }

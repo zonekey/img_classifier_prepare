@@ -29,9 +29,9 @@
                 j = JSON.parse(res)
                 var dt = new Date();
                 document.getElementById('img').src = j.url + "?dt=" + dt.getTime();
-                document.getElementById('top1').innerHTML = j.pred.top1;
-                document.getElementById('top2').innerHTML = j.pred.top2;
-                document.getElementById('top3').innerHTML = j.pred.top3;
+                document.getElementById('top1').innerHTML = j.pred.top1; document.getElementById('score1').innerHTML = j.pred.score1;
+                document.getElementById('top2').innerHTML = j.pred.top2; document.getElementById('score2').innerHTML = j.pred.score2;
+                document.getElementById('top3').innerHTML = j.pred.top3; document.getElementById('score3').innerHTML = j.pred.score3;
                 document.getElementById('key').innerHTML = j.key;
                 document.getElementById('label').innerHTML = j.label;
 
@@ -89,10 +89,6 @@
             name = 'top' + n.toString();    // 构造 id name
             e = document.getElementById(name);
             title = e.innerHTML;
-
-            // FIXME: title 为空格分隔，前面为 title, 后面为 score，需要扔掉 score
-            ss = title.split(" ");
-            title = ss[0];
 
             selected(title);
 
@@ -167,27 +163,29 @@
         
         <table border="1">
           <tr>
-            <td><div id='top1'>top1</div></td> <td><input type='button' value='对?' onclick="select_me(1)"/></td>
+            <td><div id='top1'/></td> <td><div id='score1'/></td> <td><input type='button' value='对?' onclick="select_me(1)"/></td>
           </tr>
           <tr>
-            <td><div id='top2'>top2</div></td> <td><input type='button' value='对?' onclick="select_me(2)"/></td>
+            <td><div id='top2'/></td> <td><div id='score2'/></td> <td><input type='button' value='对?' onclick="select_me(2)"/></td>
           </tr>
           <tr>
-            <td><div id='top3'>top2</div></td> <td><input type='button' value='对?' onclick="select_me(3)"/></td>
+            <td><div id='top3'/></td> <td><div id='score3'/></td> <td><input type='button' value='对?' onclick="select_me(3)"/></td>
           </tr>
         </table>
     </div>
 
 
     <div id='buttons'>
-		如果自动判断的不合理，请选择正确的分类: <select id='all_labels'></select>
-			<input type='button' value='确认, 下一张' onclick="confirm_curr()"/>
-		<p>
         <table border='1'>
         <tr>
         <td>上次选择为</td><td><b><div id='last_selected'></div></b></td> <td><input type='button' value='重复上次选择' onclick="reselect()"/></td>
         </tr>
-        </table>
+       </table>
+
+		<p>
+ 		如果自动判断的不合理，请选择正确的分类: <select id='all_labels'></select>
+			<input type='button' value='确认, 下一张' onclick="confirm_curr()"/>
+
         <p>
 		撤销上次选择，重新分类:
         <input type='button' value='撤销' onclick="undo()"/>
