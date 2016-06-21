@@ -83,6 +83,7 @@ class Application(tornado.web.Application):
             (r'/retrain/api/next', RetrainNextImageHandler),    # 获取下一张图片的分类结果 ..
             (r'/retrain/api/confirm', RetrainImageCfHandler),   # 确认分类结果，PUT
             (r'/retrain/api/cancel', RetrainImageCancelHandler),  # 撤销
+            (r'/retrain/api/skip', RetrainImageSkipHandler), # 跳过
 
             (r'/imgs/(.*)', NoCacheHandler, {'path': self.__mis_root } ), # 图片文件..
 
@@ -131,10 +132,18 @@ class Application(tornado.web.Application):
         ut.save_image_result(key, label, title)
 
 
+    def skip(self, key, user):
+        ut = self.get_user(user)
+        ut.skip(key)
+
+
     def cancel_last(self, user):
         ''' 撤销最后的保存 '''
         ut = self.get_user(user)
         ut.cancel()
+
+    def redo(self, user, fname):
+        self.get_user(user).redo(fname)
 
 
     def next_sid(self):
@@ -358,6 +367,17 @@ class RetrainImageCfHandler(BaseRequest):
         self.finish('OK')
 
 
+class RetrainImageSkipHandler(BaseRequest):
+    def put(self):
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        j = json.loads(self.request.body)
+        key = j['key'].encode('utf-8')      # json 返回 unicode
+        print 'skip:', key, self.current_user
+
+        self.application.skip(key, self.current_user)
+        self.finish('OK')
+
+
 class RetrainImageCancelHandler(BaseRequest):
     def put(self):
         ''' 撤销最后的选择 ...'''
@@ -366,6 +386,16 @@ class RetrainImageCancelHandler(BaseRequest):
 
         print 'undo:', user
         self.application.cancel_last(user)
+        self.finish('OK')
+
+
+class RetrainImageRedoHandler(BaseRequest):
+    def put(self):
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        j = json.loads(self.request.body)
+        key = j['key'].encode('utf-8')      # json 返回 unicode
+        print 'redo:', key, self.current_user
+        self.application.redo(self.current_user, key)
         self.finish('OK')
 
 

@@ -62,9 +62,20 @@ class UserTask:
         if fname == self.__pending_img_fname:
             self.__pending_img_fname = None
 
+        print 'saving:', self.__user, label, title, fname
+
         self.__undo.append(fname)
         conn = sq.connect(self.db_name())
         cmd = 'update img set label={},title="{}" where fname = "{}";'.format(label, title, fname)
+        conn.execute(cmd)
+        conn.commit()
+        conn.close()
+
+
+    def skip(self, fname):
+        self.__pending_img_fname = None
+        conn = sq.connect(self.db_name())
+        cmd = 'update img set label = -2 where fname = "{}"'.format(fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()
@@ -100,7 +111,7 @@ class UserTask:
         '''
 
         conn = sq.connect(self.db_name())
-        cmd = 'select fname from img where label = -2 and who = "{}" order by fname desc;'.format(self.__user)
+        cmd = 'select fname from img where label = -1 and who = "{}" order by fname desc;'.format(self.__user)
         cursor = conn.execute(cmd)
         fs = cursor.fetchone()
         if fs is None:
