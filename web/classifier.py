@@ -81,9 +81,7 @@ class Classifier:
 
 
     def title2label(self, title):
-        print '"{}"'.format(title)
         for i in range(0, len(self.__labels)):
-            print '"{}"'.format(self.__labels[i])
             if title == self.__labels[i]:
                 return i
         print 'Exception: NO matched title:', title

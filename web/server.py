@@ -269,6 +269,7 @@ class RetrainMedia2ImageHandler(BaseRequest):
             self.redirect("login" + "?loc=" + self.request.uri)
             return
 
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         mid = self.get_query_argument('mid')
         mi = self.application.get_media2image(mid)
         frames = mi.frames()    # 已经转换的帧数 ..
@@ -332,8 +333,8 @@ class RetrainImageCfHandler(BaseRequest):
             label 为对应的类别 ...
         '''
         j = json.loads(self.request.body)
-        key = j['key']
-        title = j['title']
+        key = j['key'].encode('utf-8')      # json 返回 unicode
+        title = j['title'].encode('utf-8')  # 
         global cf
         label = cf.title2label(title)
         user = self.current_user
