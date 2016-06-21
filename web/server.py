@@ -45,13 +45,15 @@ class Application(tornado.web.Application):
 
         if sys.platform.find('win32') == 0:
             self.__mis_root = "c:/store/imgs" # 存储转换后的图片 ..
+            cmd_path = self.__mis_root.replace('/', '\\')
+            os.system('mkdir ' + cmd_path) # cmd.exe 需要 
         else:
             home = os.getenv('HOME')
             self.__mis_root = home + '/store/imgs'
+            os.system('mkdir -p ' + self.__mis_root)
         self.__users = {}
 
 
-        os.system('mkdir -p ' + self.__mis_root)
 
         # 准备数据库 ...
         self.prepare_db()
@@ -188,14 +190,14 @@ class Application(tornado.web.Application):
         return s.is_running()
 
     
-    def create_media2image(self, mid, fname):
+    def create_media2image(self, user, mid, fname):
         dst_path = self.__mis_root + '/' + mid
         try:
             os.mkdir(dst_path)
         except:
             pass
 
-        mi = Media2Image(fname, (256, 256), 0.333, dst_path)
+        mi = Media2Image(user, fname, (256, 256), 0.333, dst_path)
         self.__mis[mid] = mi
 
         return mi
@@ -213,7 +215,6 @@ class Application(tornado.web.Application):
         if mi is not None:
             mi.stop()
             del self.__mis[mid]
-
 
 
 class BaseRequest(tornado.web.RequestHandler):
@@ -250,7 +251,7 @@ class RetrainIndexHandler(BaseRequest):
         print fname, path
         # FIXME: 因为 fname 可能包含非安全 url 字符，直接使用 path 的文件名部分吧
         fname = os.path.basename(path)
-        mid = self.application.create_media2image(fname, path)
+        mid = self.application.create_media2image(self.current_user, fname, path)
         self.render('media2image.html', fname = path, sname = fname)
 
 

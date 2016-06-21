@@ -23,12 +23,13 @@ def conv(f):
 
 
 class Media2Image(threading.Thread):
-    def __init__(self, media_fname, size, rate, store):
+    def __init__(self, user, media_fname, size, rate, store):
         threading.Thread.__init__(self)
         self.__fname = conv(media_fname)
         self.__size = size
         self.__rate = rate
         self.__out = store
+        self.__user = user
         self.__finished = False
         self.start()
 
@@ -66,7 +67,7 @@ class Media2Image(threading.Thread):
             x, ext = os.path.splitext(fn)
             if ext != '.jpg':
                 continue
-            cmd = 'insert into img values ("{}",-1,-1,".",".")'.format(self.__out + '/' + fn)
+            cmd = 'insert into img values ("{}",-1,-1,".","{}")'.format(self.__out + '/' + fn, self.__user) # 保存上传者
             db.execute(cmd)
 
         db.commit()

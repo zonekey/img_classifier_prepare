@@ -91,8 +91,8 @@ class UserTask:
 
 
     def next_uncf_image(self):
-        ''' 返回数据库中，label = -1，并且“无主” 的记录，选择后，update who
-            优先返回 who = user 的 label = -1 的记录
+        ''' 优先返回 who = user 的 label = -1 的记录，如果自己上传的都标定完成了，则
+            返回其他人的 label = -1 的记录 ...，并改为自己的名字 ..
         '''
 
         conn = sq.connect(self.db_name())
@@ -100,7 +100,7 @@ class UserTask:
         cursor = conn.execute(cmd)
         fs = cursor.fetchone()
         if fs is None:
-            cmd = 'select fname from img where label = -1 and who = "."'
+            cmd = 'select fname from img where label = -1'
             cursor = conn.execute(cmd)
             fs = cursor.fetchone()
             if fs is None:
