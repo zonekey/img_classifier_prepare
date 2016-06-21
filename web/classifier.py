@@ -12,7 +12,7 @@ import caffe
 import numpy as np
 import cv2
 import sys, codecs
-
+import threading
 
 
 class Classifier:
@@ -100,7 +100,10 @@ class Classifier:
 
 
     def get_labels(self):
-        return self.__labels
+        l = []
+        for e in self.__labels:
+            l.append(e)
+        return l
 
 
     def convert(self, mean_fname):

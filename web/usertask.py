@@ -51,7 +51,7 @@ class UserTask:
     def save_image_pred_result(self, fname, label):
         ''' 保存预测结果 '''
         conn = sq.connect(self.db_name())
-        cmd = 'update img set pred_label={} where fname="{}"'.format(label, fname)
+        cmd = 'update img set pred_label={} where fname="{}";'.format(label, fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()
@@ -64,7 +64,7 @@ class UserTask:
 
         self.__undo.append(fname)
         conn = sq.connect(self.db_name())
-        cmd = 'update img set label={},title="{}" where fname = "{}"'.format(label, title, fname)
+        cmd = 'update img set label={},title="{}" where fname = "{}";'.format(label, title, fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()
@@ -77,7 +77,7 @@ class UserTask:
         fname = self.__undo.pop()
         self.__pending_img_fname = None
         conn = sq.connect(self.db_name())
-        cmd = 'update img set label=-1,title="." where fname = "{}"'.format(fname)
+        cmd = 'update img set label=-1,title="." where fname = "{}";'.format(fname)
         conn.execute(cmd)
         conn.commit()
         conn.close()
@@ -96,11 +96,11 @@ class UserTask:
         '''
 
         conn = sq.connect(self.db_name())
-        cmd = 'select fname from img where label = -1 and who = "{}"'.format(self.__user)
+        cmd = 'select fname from img where label = -1 and who = "{}" order by fname;'.format(self.__user)
         cursor = conn.execute(cmd)
         fs = cursor.fetchone()
         if fs is None:
-            cmd = 'select fname from img where label = -1'
+            cmd = 'select fname from img where label = -1 order by fname;'
             cursor = conn.execute(cmd)
             fs = cursor.fetchone()
             if fs is None:
@@ -108,7 +108,7 @@ class UserTask:
                 return None
         
         fname = fs[0]
-        cmd = 'update img set who = "{}" where fname = "{}"'.format(self.__user, fname)
+        cmd = 'update img set who = "{}" where fname = "{}";'.format(self.__user, fname)
         conn.execute(cmd)
         conn.commit()
         conn.close() 

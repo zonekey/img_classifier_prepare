@@ -31,6 +31,9 @@ import caffe
 from usertask import UserTask
 
 
+lock = threading.Lock()
+
+
 def cb(opaque, rc):
     opaque.cb(rc)
 
@@ -99,6 +102,8 @@ class Application(tornado.web.Application):
         import sqlite3 as sq
         conn = sq.connect(self.__mis_root + '/labels.db')
         cmd = 'create table if not exists img (fname char(255),pred_label int, label int,title char(255),who char(128));'
+        conn.execute(cmd)
+        cmd = 'create index if not exists img_idx on img(fname);'
         conn.execute(cmd)
         conn.close()
 
@@ -197,7 +202,7 @@ class Application(tornado.web.Application):
         except:
             pass
 
-        mi = Media2Image(user, fname, (256, 256), 0.333, dst_path)
+        mi = Media2Image(user, fname, (256, 256), 0.2, dst_path)
         self.__mis[mid] = mi
 
         return mi
@@ -249,11 +254,13 @@ class RetrainIndexHandler(BaseRequest):
         if not self.current_user:
             self.redirect("/login" + "?loc=" + self.request.uri)
             return
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.render('retrain_index.html')
 
     def post(self):
         ''' 总是来自 nginx 的 /after_upload，此时文件已经存储，
         '''
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         fname = self.get_argument('file_name')
         path = self.get_argument('store_path')
         print fname, path
@@ -286,6 +293,7 @@ class RetrainShowingHandler(BaseRequest):
             self.redirect("login" + "?loc=" + self.request.uri)
             return
 
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.render('showing.html')
 
 
@@ -311,9 +319,12 @@ class RetrainNextImageHandler(BaseRequest):
                 basefname = fname[pos:]
 
                 # 预测结果，返回 { 'url': basefname, 'pred': xxxx }
-                global cf
+                global cf, lock
+                lock.acquire()
                 img = caffe.io.load_image(fname) # 加载图片 ..
                 pred = cf.predicate(img)
+                lock.release()
+                print 'pred:', pred[0][1], pred[0][2]
                 self.application.get_user(self.current_user).save_image_pred_result(fname, pred[0][0])
                 rx = { 'url': basefname,    #
                        'label': str(pred[0][0]),
@@ -323,6 +334,7 @@ class RetrainNextImageHandler(BaseRequest):
                             'top2': '{} {}'.format(pred[1][1], pred[1][2]),
                             'top3': '{} {}'.format(pred[2][1], pred[2][2]),
                        },
+                       'title': pred[0][1],
                 }
                 self.finish(rx)
 
@@ -332,6 +344,7 @@ class RetrainImageCfHandler(BaseRequest):
         ''' body 为 json 格式，key 为文件名（对应数据库中的 fname），
             label 为对应的类别 ...
         '''
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         j = json.loads(self.request.body)
         key = j['key'].encode('utf-8')      # json 返回 unicode
         title = j['title'].encode('utf-8')  # 
@@ -349,6 +362,7 @@ class RetrainImageCancelHandler(BaseRequest):
     def put(self):
         ''' 撤销最后的选择 ...'''
         user = self.current_user
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
         print 'undo:', user
         self.application.cancel_last(user)
@@ -464,13 +478,15 @@ class SinglePicture(tornado.web.RequestHandler):
         '''  curl --request POST -data-binary "@fname.jpg" --header "Content-Type: image/jpg"  http://localhost:8899/pic
              将返回分类结果 ...
         '''
-        global cf
+        global cf,lock
 
         body = self.request.body
         try:
             img = Image.open(StringIO.StringIO(body))
             img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
+            lock.acquire()
             pred = cf.predicate(img)
+            lock.release()
             rx = { "result": [] }
             for i in range(0, 3):
                 r = { 'title': pred[i][1], 'score': float(pred[i][2]) }
