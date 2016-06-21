@@ -81,7 +81,7 @@ class Application(tornado.web.Application):
             (r'/retrain/api/confirm', RetrainImageCfHandler),   # 确认分类结果，PUT
             (r'/retrain/api/cancel', RetrainImageCancelHandler),  # 撤销
 
-            (r'/imgs/(.*)', tornado.web.StaticFileHandler, {'path': self.__mis_root } ), # 图片文件..
+            (r'/imgs/(.*)', NoCacheHandler, {'path': self.__mis_root } ), # 图片文件..
 
             (r'/get_labels', GetClassifierLabelsHandler),  # 返回所有的标签，json
         ]
@@ -217,7 +217,15 @@ class Application(tornado.web.Application):
             del self.__mis[mid]
 
 
+class NoCacheHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
+
 class BaseRequest(tornado.web.RequestHandler):
+    def set_extra_headers(self, path):
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
     def get_current_user(self):
         return self.get_secure_cookie('user')
 
@@ -286,8 +294,11 @@ class RetrainNextImageHandler(BaseRequest):
             self.redirect("login" + "?loc=" + self.request.uri)
             return
 
+        # 如果不设置，ie 将使用 cache ...
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
         fname = self.application.next_image(self.current_user)
-        print fname
+        print 'next:', fname
         if fname is None:
             self.finish('None')
         else:
@@ -322,10 +333,12 @@ class RetrainImageCfHandler(BaseRequest):
         '''
         j = json.loads(self.request.body)
         key = j['key']
-        label = j['label']
+        title = j['title']
+        global cf
+        label = cf.title2label(title)
         user = self.current_user
 
-        print 'confirmed:', key, label, user
+        print 'confirmed:', key, label, user, title
 
         self.application.save_cf_result(key, label, user)
         self.finish('OK')
@@ -350,6 +363,7 @@ class GetClassifierLabelsHandler(tornado.web.RequestHandler):
     def get(self):
         global cf
         labels = cf.get_labels()
+        labels.sort()
 
         # 整理为 json 格式
         self.finish({'labels': labels})

@@ -80,6 +80,16 @@ class Classifier:
         return self.__labels[label]
 
 
+    def title2label(self, title):
+        print '"{}"'.format(title)
+        for i in range(0, len(self.__labels)):
+            print '"{}"'.format(self.__labels[i])
+            if title == self.__labels[i]:
+                return i
+        print 'Exception: NO matched title:', title
+        return -100
+
+
     def load_labels(self, fname):
         ''' 从 fname 中加载标签解释 '''
         labels = []

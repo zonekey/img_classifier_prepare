@@ -20,6 +20,7 @@
 
             if (res == 'None') {
                 document.getElementById('image').innerHTML = "No more images";
+                alert("No more images!");
             }
             else {
                 // json 格式
@@ -48,12 +49,14 @@
         {
             // 确认当前分类结果，保存，下一帧 ...
 			// 从 all_labels 中选择当前选中的标签 ...
-			index = document.getElementById('all_labels').selectedIndex;
+			e = document.getElementById('all_labels');
+            title = e.options[e.selectedIndex].text;
 
             req = new XMLHttpRequest();
             req.open('PUT', '/retrain/api/confirm', false);
             req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            req.send('{"key":"' + document.getElementById('key').innerHTML + '", "label":"' + index.toString() + '"}');
+            req.send('{"key":"' + document.getElementById('key').innerHTML + '", "title":"' + title + '"}');
+
 
             load_next_image()
         }
