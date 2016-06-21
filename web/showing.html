@@ -1,6 +1,47 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title> manual classifier image </title>
+
+	<style>
+#header{
+	background-color: black;
+	color: white;
+	text-align: center;
+	padding: 5px;
+}
+
+#image {
+	float: left;
+	width: 640px;
+	height: 360px;
+	padding: 10px;
+}
+
+#img {
+	width: 100%;
+	height:100%;
+	object-fit: contain;
+}
+
+#predication {
+	float: left;
+	text-align: center;
+}
+
+#others {
+clear: both;
+}
+
+#footer {
+	background-color: black;
+	color: white;
+	clear: both;
+	text-align: center;
+	padding: 5px;
+}
+
+	</style>
 
     <script type='text/javascript'>
 
@@ -154,35 +195,49 @@
     </script>
 </head>
 <body onload='load_next_image()'>
-    <div id='image'>
-        <img src='' id='img' alt='loading' width='640px' height='360px'>
-        </img>
+	<div id='header'>
+		<h1> 图像在线分类标定 </h1>
+	</div>
 
-        <p>
-        <b>预测类型为：</b>
+    <div id='image'>
+        <img src='1.jpg' id='img' alt='loading' width='100%' height='100%' />
+	</div>
+
+	<div id='predication'>
+        <h2> 预测类型为：</h2>
         
         <table border="1">
           <tr>
-            <td><div id='top1'/></td> <td><div id='score1'/></td> <td><input type='button' value='对?' onclick="select_me(1)"/></td>
+            <td><div id='top1'>top1</div></td> 
+			<td><div id='score1'>score1</div></td>
+			<td><input type='button' value='对?' onclick="select_me(1)"/></td>
           </tr>
           <tr>
-            <td><div id='top2'/></td> <td><div id='score2'/></td> <td><input type='button' value='对?' onclick="select_me(2)"/></td>
+            <td><div id='top2'>top2</div></td> 
+			<td><div id='score2'>score2</div></td>
+			<td><input type='button' value='对?' onclick="select_me(2)"/></td>
           </tr>
           <tr>
-            <td><div id='top3'/></td> <td><div id='score3'/></td> <td><input type='button' value='对?' onclick="select_me(3)"/></td>
+            <td><div id='top3'>top3</div></td> 
+			<td><div id='score3'>score3</div></td>
+            <td><input type='button' value='对?' onclick="select_me(3)"/></td>
           </tr>
         </table>
-    </div>
 
+		<hr/>
 
-    <div id='buttons'>
-        <table border='1'>
-        <tr>
-        <td>上次选择为</td><td><b><div id='last_selected'></div></b></td> <td><input type='button' value='重复上次选择' onclick="reselect()"/></td>
-        </tr>
+        <table border='0'>
+          <tr>
+            <td>上次选择:</td>
+			<td><b><div id='last_selected'></div></b></td>
+			<td><input type='button' value='重复上次选择' onclick="reselect()"/></td>
+          </tr>
        </table>
 
-		<p>
+
+    </div>
+
+	<div id='others'>
  		如果自动判断的不合理，请选择正确的分类: <select id='all_labels'></select>
 			<input type='button' value='确认, 下一张' onclick="confirm_curr()"/>
 
@@ -193,11 +248,10 @@
         不确认或者垃圾图片：
         <input type='button' value='丢弃' onclick="skip()"/>
     </div>
-    <hr/>
-    <div id='debug' >
+
+    <div id='footer' >
         <b>调试信息</b>
-       <br> <div id='key'></div> &nbsp; <div id='label'></div>
-        <hr/>
+       <div id='key'>unknown</div> &nbsp; <div id='label'>-1</div>
     </div>
 
 
