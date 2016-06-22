@@ -1,4 +1,3 @@
-#include "KVConfig.h"
 #include "imga.h"
 #include "video_source.h"
 #include <iostream>
@@ -44,10 +43,10 @@ int main(int args, char **argv)
 {
  	::google::InitGoogleLogging(argv[0]);
 	signal(SIGINT, sighandler);
-	char *deploy = "../models/deploy.prototxt";
-	char *model = "../models/caffenet.caffemodel";
-	char *mean = "../models/mean.binaryproto";
-	char *labels = "../models/labels.txt";
+	std::string deploy = "../models/deploy.prototxt";
+	std::string model = "../models/caffenet.caffemodel";
+	std::string mean = "../models/mean.binaryproto";
+	std::string labels = "../models/labels.txt";
 	Classifier imgc = Classifier(deploy, model, mean, labels);
    	FFmpegVideoSource fvs;
 	fvs.open(argv[1]);

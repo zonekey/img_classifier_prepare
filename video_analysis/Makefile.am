@@ -7,5 +7,5 @@ va_CXXFLAGS = -I/opt/local/include \
 			-DUSE_OPENCV \
 			  -DCPU_ONLY \
 			  @OPENCV_CFLAGS@
-va_LDADD = -L/opt/local/lib -lcaffe -lswscale -lavcodec -lavformat -lavutil -lboost_system-mt -lglog \
+va_LDADD = -L/opt/local/lib -lcaffe -lswscale -lavcodec -lavformat -lavutil -lboost_system -lglog \
 		   @OPENCV_LIBS@
