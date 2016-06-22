@@ -42,7 +42,7 @@ void sighandler(int signo)
 int main(int args, char **argv)
 {
 	if (args == 1 || strncmp(argv[1], "-help", 5) == 0) {
-		fprintf(stdout, "usage: %s url ftp", argv[0]);
+		fprintf(stdout, "usage: %s url time_interval", argv[0]);
 		exit(0);
 	}
  	::google::InitGoogleLogging(argv[0]);
