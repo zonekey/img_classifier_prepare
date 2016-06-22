@@ -1,0 +1,42 @@
+<html>
+<head>
+    <title> media to images </title>
+
+    <script type='text/javascript'>
+        function load()
+        {
+            setTimeout("on_timeout()", 1000);
+        }
+
+        function on_timeout()
+        {
+            // 查询转换进程 ...
+            xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "/retrain/media2image?mid={{sname}}", false);
+            xhttp.send();
+            document.getElementById('info').innerHTML = xhttp.responseText;
+
+            ss = xhttp.responseText.split(' ');
+            if (ss[0] == 'finished') {
+                // 转换完成，开始显示 ...
+                window.location.href = "/retrain/cf"
+            }
+            else {
+                // 继续轮询 ..
+                setTimeout("on_timeout()", 1000);
+            }
+        }
+
+    </script>
+</head>
+
+<body onload="load()">
+
+converting {{fname}}, fname is {{sname}}
+
+<br/>
+
+<div id="info"> </div>
+
+<body>
+</html>

@@ -12,29 +12,48 @@ import caffe
 import numpy as np
 import cv2
 import sys, codecs
-
-
-caffe.set_mode_cpu()    # in windows, only CPU mode supported
+import threading
 
 
 class Classifier:
-    def __init__(self, deploy, pretrained, mean, labels):
+    def __init__(self, deploy, pretrained, mean, labels, gpu = False):
+        if gpu:
+            caffe.set_mode_gpu()
+        else:
+            caffe.set_mode_cpu()    # in windows, only CPU mode supported
+
         self.__labels = self.load_labels(labels);
         mean_ar = self.convert(mean)
-        print mean_ar.shape
-        
-        self.__net = caffe.Classifier(deploy, pretrained,
-                mean = mean_ar.mean(1).mean(1),
-                channel_swap = (2, 1, 0), 
-                raw_scale = 255,
-                image_dims = (256, 256))
+
+        if True:
+            self.__net = caffe.Classifier(deploy, pretrained,
+                    mean = mean_ar.mean(1).mean(1),
+                    channel_swap = (2, 1, 0), 
+                    raw_scale = 255,
+                    image_dims = (256, 256))
+        else: 
+            self.__net = caffe.Net(deploy, pretrained, caffe.TEST)
+            print self.__net.blobs['data'].data.shape    
+
+            self.__transformer = caffe.io.Transformer({'data': self.__net.blobs['data'].data.shape})
+            self.__transformer.set_transpose('data', (2,0,1)) # height*width*channel -> channel*height*width
+            self.__transformer.set_mean('data', mean_ar)
+            self.__transformer.set_raw_scale('data', 255)
+            self.__transformer.set_channel_swap('data', (2,1,0)) # RGB -> BGR
 
 
     def predicate(self, image):
         ''' 输入图像，输出前 N 类预测结果，以及可信度
              [ ( 3, '单人-讲台区-看-学生区', 0.933), (5, '单人-讲桌-看-学生区', 0.03) ... ]
         '''
-        prediction = self.__net.predict([image], False) # 不使用crop/mirror均值
+        if True:
+            prediction = self.__net.predict([image], False) # 不使用crop/mirror均值
+        else:
+            data = self.__transformer.preprocess('data', image)
+            self.__net.blobs['data'].data[...] = map(data)
+            out = self.__net.forward()
+            print out.shape
+
         return self.sort_preds(prediction[0])
 
 
@@ -57,6 +76,18 @@ class Classifier:
         return preds
 
 
+    def title(self, label):
+        return self.__labels[label]
+
+
+    def title2label(self, title):
+        for i in range(0, len(self.__labels)):
+            if title == self.__labels[i]:
+                return i
+        print 'Exception: NO matched title:', title
+        return -100
+
+
     def load_labels(self, fname):
         ''' 从 fname 中加载标签解释 '''
         labels = []
@@ -66,6 +97,13 @@ class Classifier:
                 if len(line) > 1:
                     labels.append(line)
         return labels
+
+
+    def get_labels(self):
+        l = []
+        for e in self.__labels:
+            l.append(e)
+        return l
 
 
     def convert(self, mean_fname):
@@ -82,13 +120,15 @@ if __name__ == '__main__':
             '../models/mean.binaryproto',
             '../models/labels.txt')
 
-    image = caffe.io.load_image('1.jpg') # 加载图片 ..
+    fname = sys.argv[1]
+
+    image = caffe.io.load_image(fname) # 加载图片 ..
     pred = cf.predicate(image) # 预测
 
     # print pred
     print 'for image:'
     for i in range(0, 3):
-        print pred[i][1].decode('utf-8').encode('gbk'), pred[i][2]
+        print pred[i][0], pred[i][1].decode('utf-8').encode('utf-8'), pred[i][2]
 
 
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
