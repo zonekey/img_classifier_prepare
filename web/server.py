@@ -29,6 +29,7 @@ import threading
 import json
 import caffe
 from usertask import UserTask
+from dbhlp import DB
 
 
 lock = threading.Lock()
@@ -55,11 +56,7 @@ class Application(tornado.web.Application):
             self.__mis_root = home + '/store/imgs'
             os.system('mkdir -p ' + self.__mis_root)
         self.__users = {}
-
-
-
-        # 准备数据库 ...
-        self.prepare_db()
+        self.__db = DB(self.__mis_root + '/labels.db')
 
 
         handlers = [
@@ -92,31 +89,23 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, cookie_secret="abcd")
 
 
-    def prepare_db(self):
-        ''' 在 self.__mis_root 下创建 labels.db，格式为：
-                fname: 完整的文件路径名
-                pred_label: int
-                label: int
-                title: label 的说明
-                who: 登录者
-        '''
-        import sqlite3 as sq
-        conn = sq.connect(self.__mis_root + '/labels.db')
-        cmd = 'create table if not exists img (fname char(255),pred_label int, label int,title char(255),who char(128));'
-        conn.execute(cmd)
-        cmd = 'create index if not exists img_idx on img(fname);'
-        conn.execute(cmd)
-        conn.close()
-
 
     def get_user(self, who):
         ''' 用于存储 user 相关的 '''
         if who in self.__users:
             return self.__users[who]
         else:
-            user = UserTask(who, self.__mis_root)
+            user = UserTask(who, self.__mis_root, self.__db)
             self.__users[who] = user
             return user
+
+
+    def cnt_total(self):
+        return self.__db.get_total()
+
+
+    def cnt_labeled(self):
+        return self.__db.get_labeled()
 
 
     def next_image(self, user):
@@ -141,9 +130,6 @@ class Application(tornado.web.Application):
         ''' 撤销最后的保存 '''
         ut = self.get_user(user)
         ut.cancel()
-
-    def redo(self, user, fname):
-        self.get_user(user).redo(fname)
 
 
     def next_sid(self):
@@ -316,7 +302,6 @@ class RetrainNextImageHandler(BaseRequest):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
         fname = self.application.next_image(self.current_user)
-        print 'next:', fname
         if fname is None:
             self.finish('None')
         else:
@@ -333,8 +318,10 @@ class RetrainNextImageHandler(BaseRequest):
                 img = caffe.io.load_image(fname) # 加载图片 ..
                 pred = cf.predicate(img)
                 lock.release()
-                print 'pred:', pred[0][1], pred[0][2]
+                print 'pred:', fname, pred[0][1], pred[0][2]
                 self.application.get_user(self.current_user).save_image_pred_result(fname, pred[0][0])
+                cnt_total = self.application.cnt_total()
+                cnt_labeled = self.application.cnt_labeled()
                 rx = { 'url': basefname,    #
                        'label': str(pred[0][0]),
                        'key': fname,        # 当确认是，需要更新数据库 ..
@@ -342,8 +329,12 @@ class RetrainNextImageHandler(BaseRequest):
                            'top1': pred[0][1], 'score1': "{0:.5f}".format(pred[0][2]),
                            'top2': pred[1][1], 'score2': "{0:.5f}".format(pred[1][2]),
                            'top3': pred[2][1], 'score3': "{0:.5f}".format(pred[2][2]),
+                           'top4': pred[3][1], 'score4': "{0:.5f}".format(pred[3][2]),
+                           'top5': pred[4][1], 'score5': "{0:.5f}".format(pred[4][2]),
                        },
                        'title': pred[0][1],
+                       'cnt_total': str(cnt_total),
+                       'cnt_rest': str(cnt_total - cnt_labeled),
                 }
                 self.finish(rx)
 
@@ -361,8 +352,6 @@ class RetrainImageCfHandler(BaseRequest):
         label = cf.title2label(title)
         user = self.current_user
 
-        print 'confirmed:', key, label, user, title
-
         self.application.save_cf_result(key, label, user)
         self.finish('OK')
 
@@ -372,7 +361,6 @@ class RetrainImageSkipHandler(BaseRequest):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         j = json.loads(self.request.body)
         key = j['key'].encode('utf-8')      # json 返回 unicode
-        print 'skip:', key, self.current_user
 
         self.application.skip(key, self.current_user)
         self.finish('OK')
@@ -384,18 +372,7 @@ class RetrainImageCancelHandler(BaseRequest):
         user = self.current_user
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
-        print 'undo:', user
         self.application.cancel_last(user)
-        self.finish('OK')
-
-
-class RetrainImageRedoHandler(BaseRequest):
-    def put(self):
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        j = json.loads(self.request.body)
-        key = j['key'].encode('utf-8')      # json 返回 unicode
-        print 'redo:', key, self.current_user
-        self.application.redo(self.current_user, key)
         self.finish('OK')
 
 
