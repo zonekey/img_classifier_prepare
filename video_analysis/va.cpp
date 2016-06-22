@@ -1,4 +1,3 @@
-#include "KVConfig.h"
 #include "imga.h"
 #include "video_source.h"
 #include <iostream>
