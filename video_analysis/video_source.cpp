@@ -136,7 +136,7 @@ cv::Mat FFmpegVideoSource::next_frame(double &stamp, bool &eof)
 			if (valid_decodere_[pkg.stream_index]) {
 				// valid video frame, decode ...		
 				AVStream *stream = ctx_->streams[pkg.stream_index];
-				stamp = pkg.pts * stream->time_base.num / stream->time_base.den;
+				stamp = 1.0 * pkg.pts * stream->time_base.num / stream->time_base.den;
 				m = one_video_frame(pkg);
 			}
 
