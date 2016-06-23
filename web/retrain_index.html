@@ -1,13 +1,67 @@
 <html>
+<head>
 <title> retrain ... </title>
+<script type='text/javascript'>
+
+interval = null;
+
+function openProgressBar() {
+	uuid = "";
+	for (i = 0; i < 32; i++) {
+		uuid += Math.floor(Math.random() * 16).toString(16);
+	}
+
+	url = document.getElementById('upload').action;
+	url += '?X-Progress-ID=' + uuid;
+	document.getElementById('upload').action = url;
+
+	interval = window.setInterval(
+			function() {
+				fetch(uuid);
+			},
+			1000
+	);
+}
+
+function fetch(uuid) {
+	req = new XMLHttpRequest();
+	req.open('GET', '/progress', 1);
+	req.setRequestHeader('X-Progress-ID', uuid);
+	req.onreadystatechange = function() {
+		if (req.status == 200) {
+			document.getElementById('tp').innerHTML = req.responseText;
+			j = JSON.parse(req.responseText);
+			if (j.state == 'done' || upload.state == 'uploading') {
+				bar = document.getElementById('progressbar');
+				w = 400 * j.received / j.size;
+				bar.style.width = w + 'px';
+			}
+
+			if (upload.state == 'done') {
+				window.clearTimeout(interval);
+			}
+		}
+	}
+	req.send(null);
+}
+
+
+</script>
+</head>
 <body>
 
-<form name='file_upload' enctype='multipart/form-data' method='post' action='/retrain/upload'>
+<form id='upload' enctype='multipart/form-data' method='post' action='/retrain/upload' onsubmit="openProgressBar(); return true;">
 	<center>上传过程将比较漫长，请耐心等待 ..., 上传完成后，将自动进行切分，继续等待 ...
 	<p>
     <input type='file' name='media_fname'/><br/>
     <input type='submit' value='upload'/>
+	<input type='hidden' name='MAX_FILE_SIZE' value="300000000" />
 	</center>
+
+	<div id="progress" style="width: 400px; border: 1px solid black">
+	  <div id="progressbar" style="width: 1px; background-color: black; border: 1px solid white">&nbsp;</div>
+	</div>
+	uploading state:<div id="tp">...</div>
 </form>
 
 
