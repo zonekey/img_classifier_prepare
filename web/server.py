@@ -259,8 +259,7 @@ class RetrainIndexHandler(BaseRequest):
         fname = self.get_argument('file_name')
         path = self.get_argument('store_path')
         print fname, path
-        # FIXME: 因为 fname 可能包含非安全 url 字符，直接使用 path 的文件名部分吧
-        fname = os.path.basename(path)
+        fname = fname.encode('utf-8') # unicode 转换为 utf8
         mid = self.application.create_media2image(self.current_user, fname, path)
         self.render('media2image.html', fname = path, sname = fname)
 
@@ -273,7 +272,13 @@ class RetrainMedia2ImageHandler(BaseRequest):
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         mid = self.get_query_argument('mid')
+        mid = mid.encode('utf-8')
+
         mi = self.application.get_media2image(mid)
+        if mi is None:
+            self.finish('finished 0 frames!!')
+            return
+
         frames = mi.frames()    # 已经转换的帧数 ..
         if mi.is_finished():
             self.application.destroy_media2image(mi)
@@ -305,6 +310,7 @@ class RetrainNextImageHandler(BaseRequest):
         if fname is None:
             self.finish('None')
         else:
+            fname = fname.encode('utf-8')
             # fname 为绝对路径，转换为 /imgs/mid/xxx 格式
             pos = fname.find('/imgs/')
             if pos == -1:
@@ -318,7 +324,7 @@ class RetrainNextImageHandler(BaseRequest):
                 img = caffe.io.load_image(fname) # 加载图片 ..
                 pred = cf.predicate(img)
                 lock.release()
-                print 'pred:', fname, pred[0][1], pred[0][2]
+                print 'pred:', fname, type(fname), pred[0][1], pred[0][2]
                 self.application.get_user(self.current_user).save_image_pred_result(fname, pred[0][0])
                 cnt_total = self.application.cnt_total()
                 cnt_labeled = self.application.cnt_labeled()
