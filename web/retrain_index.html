@@ -31,13 +31,13 @@ function fetch(uuid) {
 		if (req.status == 200) {
 			document.getElementById('tp').innerHTML = req.responseText;
 			j = JSON.parse(req.responseText);
-			if (j.state == 'done' || upload.state == 'uploading') {
+			if (j.state == 'done' || j.state == 'uploading') {
 				bar = document.getElementById('progressbar');
 				w = 400 * j.received / j.size;
 				bar.style.width = w + 'px';
 			}
 
-			if (upload.state == 'done') {
+			if (j.state == 'done') {
 				window.clearTimeout(interval);
 			}
 		}
@@ -61,7 +61,9 @@ function fetch(uuid) {
 	<div id="progress" style="width: 400px; border: 1px solid black">
 	  <div id="progressbar" style="width: 1px; background-color: black; border: 1px solid white">&nbsp;</div>
 	</div>
+    <center>
 	uploading state:<div id="tp">...</div>
+	</center>
 </form>
 
 

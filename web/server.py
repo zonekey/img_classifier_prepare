@@ -233,11 +233,13 @@ class BaseRequest(tornado.web.RequestHandler):
 class LoginHandler(BaseRequest):
     def get(self):
         loc = self.get_query_argument('loc', '/')
-        self.write('<html><body><form action="/login" method="post">'
-                'Name: <input type="text" name="name">'
-                '<input type="submit" value="Sign in">'
-                '<input type="hidden" name="loc" value="' + loc + '">'
-                '</form></body></html>')
+        self.write(u'<html><body><form action="/login" method="post">'
+                u'<center>请输入你的名字，让数据库记住您的贡献:<br/>'
+                u'Name: <input type="text" name="name">'
+                u'<input type="submit" value="Sign in">'
+                u'<input type="hidden" name="loc" value="' + loc + '">'
+                u'</center>'
+                u'</form></body></html>')
 
     def post(self):
         self.set_secure_cookie('user', self.get_argument('name'))
@@ -267,7 +269,7 @@ class RetrainIndexHandler(BaseRequest):
 class RetrainMedia2ImageHandler(BaseRequest):
     def get(self):
         if not self.current_user:
-            self.redirect("login" + "?loc=" + self.request.uri)
+            self.redirect("/login");
             return
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -290,7 +292,7 @@ class RetrainMedia2ImageHandler(BaseRequest):
 class RetrainShowingHandler(BaseRequest):
     def get(self):
         if not self.current_user:
-            self.redirect("login" + "?loc=" + self.request.uri)
+            self.redirect("/login" + "?loc=" + self.request.uri)
             return
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -300,7 +302,7 @@ class RetrainShowingHandler(BaseRequest):
 class RetrainNextImageHandler(BaseRequest):
     def get(self):
         if not self.current_user:
-            self.redirect("login" + "?loc=" + self.request.uri)
+            self.redirect("/login")
             return
 
         # 如果不设置，ie 将使用 cache ...
