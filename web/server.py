@@ -30,6 +30,7 @@ import json
 import caffe
 from usertask import UserTask
 from dbhlp import DB
+from baserequest import BaseRequest
 
 
 lock = threading.Lock()
@@ -221,13 +222,6 @@ class NoCacheHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
-
-class BaseRequest(tornado.web.RequestHandler):
-    def set_extra_headers(self, path):
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
-    def get_current_user(self):
-        return self.get_secure_cookie('user')
 
 
 class LoginHandler(BaseRequest):
