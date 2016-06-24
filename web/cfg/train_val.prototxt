@@ -10,7 +10,7 @@ layer {
   transform_param {
     mirror: true
 #    crop_size: 227
-    mean_file: "classrooms_mean.binaryproto"
+    mean_file: "../models/mean.binaryproto"
   }
 # mean pixel / channel-wise mean instead of mean image
 #  transform_param {
@@ -38,7 +38,7 @@ layer {
   transform_param {
     mirror: false
 #	crop_size: 227
-    mean_file: "classrooms_mean.binaryproto"
+    mean_file: "../models/mean.binaryproto"
   }
 # mean pixel / channel-wise mean instead of mean image
 #  transform_param {

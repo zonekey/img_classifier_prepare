@@ -100,6 +100,13 @@ class DB:
         self.__conn.commit()
 
 
+    def labeled_all(self):
+        ''' 返回 fname, label '''
+        cmd = 'select fname,label from img where label>=0;'
+        cursor = self.__conn.execute(cmd)
+        return cursor.fetchall()
+
+
 
 
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4

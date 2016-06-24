@@ -23,6 +23,7 @@ class VideoCap(threading.Thread):
         self.__rate = rate
         self.__quit = threading.Event()
 
+
     def start(self, callback = None):
         self.__quit.clear()
         self.__callback = callback
