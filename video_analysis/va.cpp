@@ -27,7 +27,7 @@ void print_info(frameinfo finf, int n)
 	}
 	std::ostringstream oos;
 	oos << finf.timestamp;
-	std::cout << "BF: " << oos.str() << " " 
+	std::cout << "CF: " << oos.str() << " " 
 		<< s << std::endl;
 }
 
@@ -48,20 +48,22 @@ int main(int args, char **argv)
  	::google::InitGoogleLogging(argv[0]);
 	signal(SIGINT, sighandler);
 	std::string deploy = "../models/deploy.prototxt";
-	std::string model = "../models/caffenet.caffemodel";
+	std::string model = "../models/pretrained.caffemodel";
 	std::string mean = "../models/mean.binaryproto";
 	std::string labels = "../models/labels.txt";
 	Classifier imgc = Classifier(deploy, model, mean, labels);
    	FFmpegVideoSource fvs;
 	fvs.open(argv[1]);
-	int a_time = atoi(argv[2]);
-	int tm = 0;
+	double a_time = atof(argv[2]);
+	double tm = 0;
 	
+	fprintf(stderr, "%d\n", __LINE__);
 	while (!is_quit) {
 		double stamp;
 		bool eof;
 		frameinfo finfo;		
 		cv::Mat  img = fvs.next_frame(stamp, eof);
+		fprintf(stderr, "stamp: %.3f\n", stamp);
 		if (img.rows > 0 && img.cols > 0) {
 			if (stamp >= tm) {
 				finfo.timestamp = stamp;	
@@ -70,8 +72,11 @@ int main(int args, char **argv)
 				tm = tm + a_time;
 			}
 		}
-		else
+		
+		if (eof) {
+			fprintf(stderr, "%d\n", __LINE__);
 			is_quit = true;
+		}
 	}
 	fvs.close();
 	return 0;

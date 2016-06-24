@@ -26,7 +26,7 @@ class Session(threading.Thread):
         self.__sid = sid
         self.__begin = time.time()
         self.__opaque = opaque
-        self.__result = []  # 保存每帧的分析结果 { [ {'stamp': xxx, 'rc': [ ('XXXX', 0.8766), ('YYYY', 0.1192) ... ]}, {'stamp': ....} ] }
+        self.__result = []  # 保存每帧的分析结果 { [ {'stamp': xxx, 'cf': [ (xx, 0.8766), (yy, 0.1192) ... ]}, {'stamp': ....} ] }
         self.__proc = None
         self.__started = threading.Event()
         self.__cfg = {}
@@ -96,9 +96,9 @@ class Session(threading.Thread):
                 if len(ss) == 8:
                     rc = { 'stamp': float(ss[1]), 
                            'cf': [
-                                    { 'title': self.rp(ss[2]), 'score': float(ss[3]) },
-                                    { 'title': self.rp(ss[4]), 'score': float(ss[5]) },
-                                    { 'title': self.rp(ss[6]), 'score': float(ss[7]) },
+                                    { 'label': int(ss[2]), 'score': float(ss[3]) },
+                                    { 'label': int(ss[4]), 'score': float(ss[5]) },
+                                    { 'label': int(ss[6]), 'score': float(ss[7]) },
                            ] 
                     }
 

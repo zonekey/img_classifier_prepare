@@ -1,6 +1,46 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title> manual classifier image </title>
+
+	<style>
+#header{
+	background-color: black;
+	color: white;
+	text-align: center;
+	padding: 5px;
+}
+
+#image {
+	float: left;
+	width: 640px;
+	height: 360px;
+	padding: 10px;
+}
+
+#img {
+	width: 100%;
+	height:100%;
+}
+
+#predication {
+	float: left;
+	text-align: center;
+}
+
+#others {
+clear: both;
+}
+
+#footer {
+	background-color: black;
+	color: white;
+	clear: both;
+	text-align: center;
+	padding: 5px;
+}
+
+	</style>
 
     <script type='text/javascript'>
 
@@ -29,11 +69,15 @@
                 j = JSON.parse(res)
                 var dt = new Date();
                 document.getElementById('img').src = j.url + "?dt=" + dt.getTime();
-                document.getElementById('top1').innerHTML = j.pred.top1;
-                document.getElementById('top2').innerHTML = j.pred.top2;
-                document.getElementById('top3').innerHTML = j.pred.top3;
+                document.getElementById('top1').innerHTML = j.pred.top1; document.getElementById('score1').innerHTML = j.pred.score1;
+                document.getElementById('top2').innerHTML = j.pred.top2; document.getElementById('score2').innerHTML = j.pred.score2;
+                document.getElementById('top3').innerHTML = j.pred.top3; document.getElementById('score3').innerHTML = j.pred.score3;
+                document.getElementById('top4').innerHTML = j.pred.top4; document.getElementById('score4').innerHTML = j.pred.score4;
+                document.getElementById('top5').innerHTML = j.pred.top5; document.getElementById('score5').innerHTML = j.pred.score5;
                 document.getElementById('key').innerHTML = j.key;
                 document.getElementById('label').innerHTML = j.label;
+                document.getElementById('cnt_total').innerHTML = j.cnt_total;
+                document.getElementById('cnt_rest').innerHTML = j.cnt_rest;
 
                 // 找到匹配的 title
                 var found = 0;
@@ -69,15 +113,19 @@
             index = e.selectedIndex;
             title = e.options[index].text;
 
+            selected(title);
+
+            load_next_image();
+        }
+
+        function selected(title)
+        {
             req = new XMLHttpRequest();
             req.open('PUT', '/retrain/api/confirm', false);
             req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
             req.send('{"key":"' + document.getElementById('key').innerHTML + '", "title":"' + title + '"}');
 
-            e.options[index].removeAttribute('selected');
-
-
-            load_next_image();
+            document.getElementById('last_selected').innerHTML = title;
         }
 
         function select_me(n)
@@ -86,14 +134,7 @@
             e = document.getElementById(name);
             title = e.innerHTML;
 
-            // FIXME: title 为空格分隔，前面为 title, 后面为 score，需要扔掉 score
-            ss = title.split(" ");
-            title = ss[0];
-
-            req = new XMLHttpRequest();
-            req.open('PUT', '/retrain/api/confirm', false);
-            req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            req.send('{"key":"' + document.getElementById('key').innerHTML + '", "title":"' + title + '"}');
+            selected(title);
 
             load_next_image();
         }
@@ -104,9 +145,37 @@
             req = new XMLHttpRequest();
 			req.open('PUT', '/retrain/api/cancel', false);
 			req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            req.send()
+            req.send();
 
-			load_next_image()
+            document.getElementById('last_selected').innerHTML = "";
+
+			load_next_image();
+        }
+
+        function reselect()
+        {
+            // 重复上次，由服务器决定 ...
+
+            last_title = document.getElementById('last_selected').innerHTML;
+            if (last_title.length > 3) {
+                selected(last_title);
+                load_next_image();
+            }
+            else {
+                alert('NO last title!!!!');
+            }
+        }
+
+        function skip()
+        {
+            req = new XMLHttpRequest();
+            req.open('PUT', '/retrain/api/skip', false);
+            req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            req.send('{"key":"' + document.getElementById('key').innerHTML + '"}');
+
+            document.getElementById('last_selected').innerHTML = "";
+
+            load_next_image();
         }
 
 		function get_all_labels()
@@ -129,30 +198,87 @@
     </script>
 </head>
 <body onload='load_next_image()'>
+	<div id='header'>
+		<h1> 图像在线分类标定 </h1>
+	</div>
+
     <div id='image'>
-        <img src='' id='img' alt='loading' width='640px' height='360px'>
-        </img>
+        <img src='1.jpg' id='img' alt='loading'/> 
+	</div>
+
+	<div id='predication'>
+        <h2> 预测类型为：</h2>
+        
+        <table border="1">
+          <tr>
+            <th width='260px'>title</th>
+            <th>score</th>
+            <th> 操作 </th>
+          </tr>
+          <tr>
+            <td><div id='top1'>top1</div></td> 
+			<td><div id='score1'>score1</div></td>
+			<td><input type='button' value='对?' onclick="select_me(1)"/></td>
+          </tr>
+          <tr>
+            <td><div id='top2'>top2</div></td> 
+			<td><div id='score2'>score2</div></td>
+			<td><input type='button' value='对?' onclick="select_me(2)"/></td>
+          </tr>
+          <tr>
+            <td><div id='top3'>top3</div></td> 
+			<td><div id='score3'>score3</div></td>
+            <td><input type='button' value='对?' onclick="select_me(3)"/></td>
+          </tr>
+          <tr>
+            <td><div id='top4'>top4</div></td> 
+			<td><div id='score4'>score4</div></td>
+            <td><input type='button' value='对?' onclick="select_me(4)"/></td>
+          </tr>
+          <tr>
+            <td><div id='top5'>top5</div></td> 
+			<td><div id='score5'>score5</div></td>
+            <td><input type='button' value='对?' onclick="select_me(5)"/></td>
+          </tr>
+        </table>
+
+		<hr/>
+
+        <table border='0'>
+          <tr>
+            <td>上次选择:</td>
+			<td><b><div id='last_selected'></div></b></td>
+			<td><input type='button' value='重复上次选择' onclick="reselect()"/></td>
+          </tr>
+       </table>
+
+       <hr/>
+
+       总计:<div id='cnt_total'>0</div><br/>
+       剩余:<div id='cnt_rest'>0</div>
+
+
+    </div>
+
+	<div id='others'>
+ 		如果自动判断的不合理，请选择正确的分类: <select id='all_labels'></select>
+			<input type='button' value='确认, 下一张' onclick="confirm_curr()"/>
 
         <p>
-        <b>预测类型为：</b>
-            <div id='top1a'><div id='top1'>top1</div></div> <br/>
-            <div id='top2a'><div id='top2'>top2</div> <input type='button' value='选这个?' onclick="select_me(2)"/></div> <br/>
-            <div id='top3a'><div id='top3'>top2</div> <input type='button' value='选这个?' onclick="select_me(3)"/></div> <br/>
-    </div>
-
-
-    <div id='buttons'>
-		如果自动判断的不合理，请选择正确的分类: <select id='all_labels'></select>
-			<input type='button' value='确认, 下一张' onclick="confirm_curr()"/>
-		<p>
 		撤销上次选择，重新分类:
         <input type='button' value='撤销' onclick="undo()"/>
+        <p>
+        不确认或者垃圾图片：
+        <input type='button' value='丢弃' onclick="skip()"/>
+
+		<p>
+		<a href='/retrain'>上传新的视频</a>
     </div>
-    <hr/>
-    <div id='debug' >
+
+
+    <div id='footer' >
         <b>调试信息</b>
-       <br> <div id='key'></div> &nbsp; <div id='label'></div>
-        <hr/>
+       <div id='key'>unknown</div> &nbsp; <div id='label'>-1</div>
     </div>
 
 
