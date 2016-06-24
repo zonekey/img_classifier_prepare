@@ -194,6 +194,19 @@ clear: both;
 			}
 		}
 
+		function start_train()
+		{
+			alert('NOT impl');
+			return;
+
+			// 启动训练
+			req = new XMLHttpRequest();
+			req.open('GET', '/retrain/api/start_train', false);
+			req.send();
+
+			window.location.href = '/retrain/training';
+		}
+
 
     </script>
 </head>
@@ -273,6 +286,9 @@ clear: both;
 
 		<p>
 		<a href='/retrain'>上传新的视频</a>
+
+		<p>
+		好了，就这样吧 <input type='button' value='启动训练' onclick='start_train()'/>
     </div>
 
 
