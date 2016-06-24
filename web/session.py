@@ -15,6 +15,8 @@
 import subprocess as sp
 import sys, os, threading
 import locale, time
+from runproc import Running
+
 
 curr_encoding = locale.getdefaultlocale()[1]  # UTF-8 或者 gbk/cp936 ...
 
