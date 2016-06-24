@@ -33,11 +33,11 @@ function fetch(uuid) {
 			j = JSON.parse(req.responseText);
 			if (j.state == 'done' || j.state == 'uploading') {
 				bar = document.getElementById('progressbar');
-				w = 400 * j.received / j.size;
-				bar.style.width = w + 'px';
+				w = 1.0 * j.received / j.size;
+				bar.value = w * 100;
 			}
 
-			if (j.state == 'done') {
+			if (j.state == 'done' || j.state == 'error') {
 				window.clearTimeout(interval);
 			}
 		}
@@ -56,12 +56,9 @@ function fetch(uuid) {
     <input type='file' name='media_fname'/><br/>
     <input type='submit' value='upload'/>
 	<input type='hidden' name='MAX_FILE_SIZE' value="300000000" />
-	</center>
 
-	<div id="progress" style="width: 400px; border: 1px solid black">
-	  <div id="progressbar" style="width: 1px; background-color: black; border: 1px solid white">&nbsp;</div>
-	</div>
-    <center>
+	<progress id='progressbar' value="0" max="100"/>
+
 	uploading state:<div id="tp">...</div>
 	</center>
 </form>
