@@ -16,11 +16,19 @@ import sys
 ''' 封装对 fine_tune 的调用，通过读取 stdout 得到训练的进度 ....
 '''
 class OnlineTrain(Running):
+    def __init__(self):
+        self.state = 'norunning'
+        Running.__init__(self)
+
+
     def process_handler(self):
+        self.state = 'training'
+
         while not self.need_quit():
             line = self.proc().stdout.readline()
             if not line:
                 # 进程结束 ...
+                self.state = 'done' # 训练结束
                 break
 
             line = line.strip()
@@ -41,7 +49,9 @@ class OnlineTrain(Running):
                         'test_cnt': int(ss[4]),
                         'accuracy': float(ss[5]),
                     }
+                    print 'OnlineTrain: save', d
                     self.save_info(d)
+        print 'OnlineTrain thread terminated!!!'
 
 
 

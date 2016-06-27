@@ -92,7 +92,7 @@ class Session(threading.Thread):
             if len(line) < 10:
                 continue
 
-            if line[0:3] == 'CR:':
+            if line[0:3] == 'CF:':
                 # line 格式：CR: stamp top1 score1 top2 score2 top3 score3
                 ss = line.split()
                 if len(ss) == 8:
@@ -128,7 +128,8 @@ class Session(threading.Thread):
         ''' 从 cfg 构造命令行参数, 一般拥有 url, interval '''
 
         # TODO: 修改为调用老刘的c++版本
-        command = [ 'python', 't.py', self.__cfg['url'], str(self.__cfg['interval']) ]
+        #command = [ 'python', 't.py', self.__cfg['url'], str(self.__cfg['interval']) ]
+        command = ['./va', self.__cfg['url'], str(self.__cfg['interval'])]
         return command
 
 

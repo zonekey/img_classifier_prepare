@@ -56,14 +56,18 @@ function update_info(j)
                 "elapsed": xxx
             }
      */
-
-     document.getElementById('who').innerHTML = j.who;
-     document.getElementById('time').innerHTML = j.time.toString();
-     document.getElementById('iter_num').innerHTML = j.iter_num.toString();
-     document.getElementById('train_cnt').innerHTML = j.train_cnt.toString();
-     document.getElementById('test_cnt').innerHTML = j.test_cnt.toString();
-     document.getElementById('accuracy').innerHTML = j.accuracy.toString();
-     document.getElementById('elapsed').interval = j.elapsed.toString();
+     if (j.status == 'norunning') {
+         document.getElementById('status').innerHTML = '未启动训练...';
+     }
+     else {
+         document.getElementById('who').innerHTML = j.who;
+         document.getElementById('time').innerHTML = j.time.toString();
+         document.getElementById('iter_num').innerHTML = j.iter_num.toString();
+         document.getElementById('train_cnt').innerHTML = j.train_cnt.toString();
+         document.getElementById('test_cnt').innerHTML = j.test_cnt.toString();
+         document.getElementById('accuracy').innerHTML = j.accuracy.toString();
+         document.getElementById('elapsed').interval = j.elapsed.toString();
+     }
 }
 
     </script>

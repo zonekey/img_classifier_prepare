@@ -55,6 +55,7 @@ class TrainApiHandler(BaseRequest):
             self.finish(rx)
             return
 
+        # TODO: 应该从全局配置中获取 ...
         dbname = '/home/sunkw/store/imgs/labels.db'
         cmd = ['python', 'fine_tune.py', dbname]
             
@@ -124,7 +125,24 @@ class TrainApiHandler(BaseRequest):
         ot = self.application.training
         info = ot.get_last_info()
 
-        
+        # info 内容来自 online_train.py 中的 save_info
+        rx['who'] = self.current_user
+        rx['status'] = ot.state
+        rx['time'] = info['time']
+        rx['iter_num'] = info['iter_num']
+        rx['test_cnt'] = info['test_cnt']
+        rx['train_cnt'] = info['train_cnt']
+        rx['accuracy'] = info['accuracy']
+        rx['elapsed'] = self.get_elapsed(info)
+        self.finish(rx)
+
+
+    def get_elapsed(self, info):
+        ''' 根据 iter_num 和 time 估算完成 20000 次迭代需要的时间'''
+        if info['iter_num'] > 0:
+            return 20000.0 * (info['time'] / info['iter_num'])
+        else:
+            return -1.0
 
 
 

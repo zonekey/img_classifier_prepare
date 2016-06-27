@@ -57,13 +57,11 @@ int main(int args, char **argv)
 	double a_time = atof(argv[2]);
 	double tm = 0;
 	
-	fprintf(stderr, "%d\n", __LINE__);
 	while (!is_quit) {
 		double stamp;
 		bool eof;
 		frameinfo finfo;		
 		cv::Mat  img = fvs.next_frame(stamp, eof);
-		fprintf(stderr, "stamp: %.3f\n", stamp);
 		if (img.rows > 0 && img.cols > 0) {
 			if (stamp >= tm) {
 				finfo.timestamp = stamp;	
