@@ -49,7 +49,6 @@ class Application(tornado.web.Application):
         self.__mis = {} # 保存正在进行的转换进程 ..
         self.__next_sid = 0
         self.__lock = threading.Lock()
-        self.__online_train = None
 
         if sys.platform.find('win32') == 0:
             self.__mis_root = "c:/store/imgs" # 存储转换后的图片 ..
@@ -61,7 +60,9 @@ class Application(tornado.web.Application):
             os.system('mkdir -p ' + self.__mis_root)
         self.__users = {}
         self.__db = DB(self.__mis_root + '/labels.db')
-        self.__training = False # 是否正在训练，同时只能有一个 ..
+
+        self.training = None # 是否正在训练，同时只能有一个 ..
+        self.training_user = None
 
 
         handlers = [
@@ -224,16 +225,6 @@ class Application(tornado.web.Application):
             mi.stop()
             del self.__mis[mid]
 
-
-    def save_online_trainer(self, ot):
-        self.__online_train = ot
-
-
-    def query_online_trainer(self):
-        if self.__online_train:
-            return self.__online_train.last_info()
-        else:
-            return { 'status': 'stopped' }  # 停止状态 ...
 
 
 class NoCacheHandler(tornado.web.StaticFileHandler):

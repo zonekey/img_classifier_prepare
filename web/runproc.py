@@ -82,6 +82,7 @@ class Running(threading.Thread):
 		pass
 
 
+
 if __name__ == '__main__':
 	class M(Running):
 		def process_handler(self):

@@ -30,6 +30,10 @@ function fetch()
 
             if (j.status == 'done') {
                 window.clearTimeout(interval);
+
+                document.getElementById('status').innerHTML = '训练结束';
+
+                // TODO: 生成下载链接 ...
             }
         }
     }
@@ -42,6 +46,7 @@ function update_info(j)
     /** TODO: 显示详细信息 ...
 
             j = {
+                "who": 'xxx',
                 "status": "xxx",
                 "time": xxx,
                 "iter_num": xxx,
@@ -52,6 +57,7 @@ function update_info(j)
             }
      */
 
+     document.getElementById('who').innerHTML = j.who;
      document.getElementById('time').innerHTML = j.time.toString();
      document.getElementById('iter_num').innerHTML = j.iter_num.toString();
      document.getElementById('train_cnt').innerHTML = j.train_cnt.toString();
@@ -64,6 +70,8 @@ function update_info(j)
 </head>
 <body onload="start_timer()">
     <center>
+        <h1><div id='status'>训练中...</div></h1>
+        拥有者：<div id='who'/><br>
         训练时间：<div id='time'/><br/>
         迭代次数：<div id='iter_num'/><br/>
         训练样本数：<div id='train_cnt'/><br/>

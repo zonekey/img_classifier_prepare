@@ -30,7 +30,18 @@ class OnlineTrain(Running):
 
             # FIXME: 有效记录为 'FT: .....'
             if line[0:4] == 'FT: ':
-                self.save_info(line)
+                '''
+                    FT: stamp iter_num train_cnt test_cnt accuracy 
+                '''
+                ss = line.split(' ')
+                if len(ss) == 6:
+                    d = {'time': float(ss[1]),
+                        'iter_num': int(ss[2]),
+                        'train_cnt': int(ss[3]),
+                        'test_cnt': int(ss[4]),
+                        'accuracy': float(ss[5]),
+                    }
+                    self.save_info(d)
 
 
 
