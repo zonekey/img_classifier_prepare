@@ -1,7 +1,7 @@
 import dbhlp
 import random
 import subprocess
-import sys
+import sys, os
 from dbhlp import DB
 import threading
 
@@ -58,6 +58,9 @@ if __name__ == '__main__':
            train.append(imagelist[i])
        else:
            val.append(imagelist[i])
+    os.environ["TRAIN_NUM"] = str(len(train))
+    os.environ["TEST_NUM"] = str(len(val))
+
        
     get_txt(train, 'train.txt')
     get_txt(val, 'val.txt')
