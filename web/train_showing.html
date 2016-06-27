@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>训练中...</title>
+    <script type='text/javascript'>
+
+
+interval = null;    // 
+
+function start_timer()
+{
+    interval = window.setInterval(
+        function() {
+           fetch(); 
+        },
+        2000,
+    );
+}
+
+
+function fetch()
+{
+    // 从 /train/api/get_progress 得到训练进度的更新信息，显示到界面上 ...
+    req = XMLHttpRequest();
+    req.open('GET', '/train/api/get_progress');
+    req.onreadystatechange = function() {
+        if (req.status == 200) {
+            j = JSON.parse(req.responseText);
+            update_info(j);
+
+            if (j.status == 'done') {
+                window.clearTimeout(interval);
+            }
+        }
+    }
+    req.send(null);
+}
+
+
+function update_info(j)
+{
+    /** TODO: 显示详细信息 ...
+
+            j = {
+                "status": "xxx",
+                "time": xxx,
+                "iter_num": xxx,
+                "train_cnt": xxx,
+                "test_cnt": xxx,
+                "accuracy": xxx.xxx,
+                "elapsed": xxx
+            }
+     */
+
+     document.getElementById('time').innerHTML = j.time.toString();
+     document.getElementById('iter_num').innerHTML = j.iter_num.toString();
+     document.getElementById('train_cnt').innerHTML = j.train_cnt.toString();
+     document.getElementById('test_cnt').innerHTML = j.test_cnt.toString();
+     document.getElementById('accuracy').innerHTML = j.accuracy.toString();
+     document.getElementById('elapsed').interval = j.elapsed.toString();
+}
+
+    </script>
+</head>
+<body onload="start_timer()">
+    <center>
+        训练时间：<div id='time'/><br/>
+        迭代次数：<div id='iter_num'/><br/>
+        训练样本数：<div id='train_cnt'/><br/>
+        测试样本数：<div id='test_cnt'/><br/>
+        预测精度：<div id='accuracy'/><br/>
+        预计训练完成需要时间为：<div id='elapsed'/><br/>
+    </center>
+</body>
+</html>
+
