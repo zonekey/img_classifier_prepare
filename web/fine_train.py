@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     change_solver2(cfg)
 
-    commands = ['caffe0.bin', 'train', '-solver', \
+    commands = ['../../caffe.s/.build_release/tools/caffe.bin', 'train', '-solver', \
                'training/solver.prototxt', \
                '-weights', '../models/pretrained.caffemodel', '-gpu', 'all'] 
 
