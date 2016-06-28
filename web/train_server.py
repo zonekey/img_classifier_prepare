@@ -2,10 +2,10 @@
 # coding: utf-8
 
 import tornado.web, tornado.ioloop, tornado.httpserver
-import os, sys, time
+import json
 from training import TrainApiHandler, TrainShowingHandler
-from dbhlp import DB
 
+cfg = json.load('./cfg/config.json')
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -21,7 +21,10 @@ class Application(tornado.web.Application):
 
 def main():
     httpserver = tornado.httpserver.HTTPServer(Application())
-    httpserver.listen(8898)
+    port = 8898
+    if 'train_server_port' in cfg:
+        port = cfg['train_server_port']
+    httpserver.listen(port)
     tornado.ioloop.IOLoop.instance().start()
 
 

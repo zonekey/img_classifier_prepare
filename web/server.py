@@ -33,7 +33,7 @@ from dbhlp import DB
 from baserequest import BaseRequest
 
 lock = threading.Lock()
-
+cfg = json.load("cfg/config.json")
 
 def cb(opaque, rc):
     opaque.cb(rc)
@@ -47,20 +47,25 @@ class Application(tornado.web.Application):
         self.__next_sid = 0
         self.__lock = threading.Lock()
 
+        global cfg
+
         if sys.platform.find('win32') == 0:
             self.__mis_root = "c:/store/imgs" # 存储转换后的图片 ..
             cmd_path = self.__mis_root.replace('/', '\\')
             os.system('mkdir ' + cmd_path) # cmd.exe 需要 
         else:
-            home = os.getenv('HOME')
-            self.__mis_root = home + '/store/imgs'
+            if "imgpath" in cfg:
+                self.__mis_root = cfg["imgpath"]
+            else:
+                home = os.getenv('HOME')
+                self.__mis_root = home + '/store/imgs'
             os.system('mkdir -p ' + self.__mis_root)
+
         self.__users = {}
-        self.__db = DB(self.__mis_root + '/labels.db')
-
-        self.training = None # 是否正在训练，同时只能有一个 ..
-        self.training_user = None
-
+        dbname = 'labels.db'
+        if 'dbfname' in cfg:
+            dbname = cfg['dbfname']
+        self.__db = DB(self.__mis_root + '/' + dbname)
 
         handlers = [
             (r'/', HelpHandler),
@@ -90,7 +95,6 @@ class Application(tornado.web.Application):
             (r'/get_labels', GetClassifierLabelsHandler),  # 返回所有的标签，json
         ]
         tornado.web.Application.__init__(self, handlers, cookie_secret="abcd")
-
 
 
     def get_user(self, who):
@@ -522,7 +526,10 @@ cf = Classifier('../models/deploy.prototxt',
 
 def main():
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(8899)
+    port = 8899
+    if 'cf_server_port' in cfg:
+        port = cfg['cf_server_port']
+    http_server.listen(port)
     tornado.ioloop.IOLoop.instance().start()
 
 
