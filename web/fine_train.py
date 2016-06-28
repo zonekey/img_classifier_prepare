@@ -47,6 +47,7 @@ def get_txt(datas, fname):
 
 
 if __name__ == '__main__':
+    os.environ['ONLINE_TRAIN'] = 'true'
     imagelist = get_database_record(sys.argv[1])
     random.shuffle(imagelist)
 
