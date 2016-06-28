@@ -1,0 +1,6 @@
+{
+    "dbfname": "labels.db",
+    "imgpath": "/home/sunkw/store/imgs",
+    "cf_server_port": 8899,
+    "train_server_port": 8898
+}
