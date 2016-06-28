@@ -67,8 +67,12 @@ function update_info(j)
          document.getElementById('train_cnt').innerHTML = String(j.train_cnt);
          document.getElementById('test_cnt').innerHTML = String(j.test_cnt);
          document.getElementById('accuracy').innerHTML = String(j.accuracy);
-         document.getElementById('elapsed').innerHTML = String(j.elapsed);
-         document.getElementById('stamp').innerHTML = String(j.time);
+         var date = new Date(null);
+         date.setSeconds(j.elapsed);
+         document.getElementById('elapsed').innerHTML = date.toISOString().substr(11, 8);
+         var date = new Date(null);
+         date.setSeconds(j.time);
+         document.getElementById('stamp').innerHTML = date.toISOString().substr(11, 8);
      }
 }
 

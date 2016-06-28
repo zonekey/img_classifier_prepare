@@ -71,6 +71,7 @@ if __name__ == '__main__':
            val.append(imagelist[i])
     os.environ["TRAIN_NUM"] = str(len(train))
     os.environ["TEST_NUM"] = str(len(val))
+    os.environ['GLOG_minloglevel'] = '5'
 
        
     get_txt(train, 'train.txt')
