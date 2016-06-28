@@ -65,7 +65,6 @@ if __name__ == '__main__':
     get_txt(train, 'train.txt')
     get_txt(val, 'val.txt')
 
-#    change_solver(len(val)) 
 
     cfg = { 
         'test_iter': str(len(val)),
@@ -73,7 +72,7 @@ if __name__ == '__main__':
 
     change_solver2(cfg)
 
-    commands = ['../../caffe.s/.build_release/tools/caffe.bin', 'train', '-solver', \
+    commands = ['caffe.bin', 'train', '-solver', \
                'training/solver.prototxt', \
                '-weights', '../models/pretrained.caffemodel', '-gpu', 'all'] 
 
