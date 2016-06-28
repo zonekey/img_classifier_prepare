@@ -18,6 +18,7 @@ from online_train import OnlineTrain
 class TrainShowingHandler(BaseRequest):
     def get(self):
         ''' FIXME: 如果没有登录，直接点开这个url，返回 404 错误 :) '''
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         if not self.current_user:
             self.clear()
             self.set_status(404)
@@ -28,6 +29,7 @@ class TrainShowingHandler(BaseRequest):
 
 class TrainApiHandler(BaseRequest):
     def get(self, cmd):
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         if not self.current_user:
             self.redirect('/login?loc=' + self.request.uri)
             return
@@ -36,6 +38,10 @@ class TrainApiHandler(BaseRequest):
             return self.start_train()
         if cmd == 'stop_train':
             return self.stop_train()
+        if cmd == 'get_progress':
+            return self.get_progress()
+
+        self.finish('unknown cmd:' + cmd)
 
     
     def start_train(self):
@@ -57,7 +63,7 @@ class TrainApiHandler(BaseRequest):
 
         # TODO: 应该从全局配置中获取 ...
         dbname = '/home/sunkw/store/imgs/labels.db'
-        cmd = ['python', 'fine_tune.py', dbname]
+        cmd = ['python', 'fine_train.py', dbname]
             
         ot = OnlineTrain()
         ot.start(cmd)
@@ -95,7 +101,7 @@ class TrainApiHandler(BaseRequest):
         ot.stop()
         self.application.training = None
         self.application.training_user = None
-        rx['info'] = 'stopped'
+        rx['info'] = 'done'
         self.finish(rx)
 
 
@@ -118,21 +124,26 @@ class TrainApiHandler(BaseRequest):
 
         '''
         rx = {'status': 'norunning' }
-        if not self.application.training:
+        if self.application.training is None:
+            print 'get_progress: no training???'
             self.finish(rx)
             return
 
         ot = self.application.training
         info = ot.get_last_info()
+        if info is None:
+            print 'get_progress: no result???'
+            self.finish(rx)
+            return
 
         # info 内容来自 online_train.py 中的 save_info
-        rx['who'] = self.current_user
-        rx['status'] = ot.state
+        rx['who'] = self.application.training_user
         rx['time'] = info['time']
         rx['iter_num'] = info['iter_num']
         rx['test_cnt'] = info['test_cnt']
         rx['train_cnt'] = info['train_cnt']
         rx['accuracy'] = info['accuracy']
+        rx['status'] = ot.state
         rx['elapsed'] = self.get_elapsed(info)
         self.finish(rx)
 
@@ -143,10 +154,6 @@ class TrainApiHandler(BaseRequest):
             return 20000.0 * (info['time'] / info['iter_num'])
         else:
             return -1.0
-
-
-
-
 
 
 

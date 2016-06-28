@@ -313,7 +313,9 @@ class RetrainNextImageHandler(BaseRequest):
 
         fname = self.application.next_image(self.current_user)
         if fname is None:
-            self.finish('None')
+            # 返回数据库中的样本数目 ...
+            rx = { 'result': 'no', 'cnt_total': str(self.application.cnt_total()) }
+            self.finish(rx)
         else:
             fname = fname.encode('utf-8')
             # fname 为绝对路径，转换为 /imgs/mid/xxx 格式
@@ -334,6 +336,7 @@ class RetrainNextImageHandler(BaseRequest):
                 cnt_total = self.application.cnt_total()
                 cnt_labeled = self.application.cnt_labeled()
                 rx = { 'url': basefname,    #
+                       'result': 'more',
                        'label': str(pred[0][0]),
                        'key': fname,        # 当确认是，需要更新数据库 ..
                        'pred': {

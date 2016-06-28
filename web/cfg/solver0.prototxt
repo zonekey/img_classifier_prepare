@@ -1,14 +1,14 @@
 net: "training/train_val.prototxt"
 test_iter: 1259 
-test_interval: 50 
+test_interval: 1000
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.2
 stepsize: 2000
-display: 10 
+display: 2
 max_iter: 20000
 momentum: 0.9
 weight_decay: 0.0005
-snapshot: 50
+snapshot: 1000
 snapshot_prefix: "training/tmp-"
 solver_mode: GPU

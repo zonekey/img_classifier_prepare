@@ -29,6 +29,7 @@ class OnlineTrain(Running):
             if not line:
                 # 进程结束 ...
                 self.state = 'done' # 训练结束
+                print 'pipe end!'
                 break
 
             line = line.strip()

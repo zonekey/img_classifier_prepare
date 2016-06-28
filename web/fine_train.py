@@ -1,7 +1,7 @@
 import dbhlp
 import random
-import subprocess
-import sys, os
+import subprocess, time
+import sys, os, signal
 from dbhlp import DB
 import threading
 
@@ -46,6 +46,16 @@ def get_txt(datas, fname):
 
 
 
+caffe = None
+quit = False
+
+def signal_handler(signal, f):
+    if caffe:
+        caffe.terminate()
+    quit = True
+    sys.exit()
+
+
 if __name__ == '__main__':
     os.environ['ONLINE_TRAIN'] = 'true'
     imagelist = get_database_record(sys.argv[1])
@@ -76,9 +86,15 @@ if __name__ == '__main__':
     print "FT: 0 0 0 0 0"
     sys.stdout.flush()
 
+    signal.signal(signal.SIGTERM, signal_handler)
+
     commands = ['caffe.bin', 'train', '-solver', \
                'training/solver.prototxt', \
                '-weights', '../models/pretrained.caffemodel', '-gpu', 'all'] 
 
-    subprocess.call(commands)
+    caffe = subprocess.Popen(commands)
+
+    while not quit:
+        time.sleep(1.0)
+        
 

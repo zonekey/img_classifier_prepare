@@ -59,14 +59,15 @@ clear: both;
             req.send();
 
             res = req.responseText;
+            j = JSON.parse(res)
 
-            if (res == 'None') {
+            if (j.result == 'no') {
+                document.getElementById('cnt_total').innerHTML = j.cnt_total;
                 document.getElementById('image').innerHTML = "No more images";
                 alert("No more images!");
             }
             else {
                 // json 格式
-                j = JSON.parse(res)
                 var dt = new Date();
                 document.getElementById('img').src = j.url + "?dt=" + dt.getTime();
                 document.getElementById('top1').innerHTML = j.pred.top1; document.getElementById('score1').innerHTML = j.pred.score1;
@@ -196,16 +197,13 @@ clear: both;
 
 		function start_train()
 		{
-			alert('NOT impl');
-			return;
-
 			// 启动训练
 			req = new XMLHttpRequest();
-			req.open('GET', '/retrain/api/start_train', false);
+			req.open('GET', '/train/api/start_train', false);
 			req.send();
 
 
-			window.location.href = '/retrain/training';
+			window.location.href = '/train/showing';
 		}
 
 

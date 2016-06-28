@@ -13,7 +13,7 @@ function start_timer()
         function() {
            fetch(); 
         },
-        2000,
+        2000
     );
 }
 
@@ -21,10 +21,12 @@ function start_timer()
 function fetch()
 {
     // 从 /train/api/get_progress 得到训练进度的更新信息，显示到界面上 ...
-    req = XMLHttpRequest();
+    req = new XMLHttpRequest();
     req.open('GET', '/train/api/get_progress');
     req.onreadystatechange = function() {
         if (req.status == 200) {
+            if (req.responseText.length < 10)
+                return;
             j = JSON.parse(req.responseText);
             update_info(j);
 
@@ -61,28 +63,44 @@ function update_info(j)
      }
      else {
          document.getElementById('who').innerHTML = j.who;
-         document.getElementById('time').innerHTML = j.time.toString();
-         document.getElementById('iter_num').innerHTML = j.iter_num.toString();
-         document.getElementById('train_cnt').innerHTML = j.train_cnt.toString();
-         document.getElementById('test_cnt').innerHTML = j.test_cnt.toString();
-         document.getElementById('accuracy').innerHTML = j.accuracy.toString();
-         document.getElementById('elapsed').interval = j.elapsed.toString();
+         document.getElementById('iter_num').innerHTML = String(j.iter_num);
+         document.getElementById('train_cnt').innerHTML = String(j.train_cnt);
+         document.getElementById('test_cnt').innerHTML = String(j.test_cnt);
+         document.getElementById('accuracy').innerHTML = String(j.accuracy);
+         document.getElementById('elapsed').innerHTML = String(j.elapsed);
+         document.getElementById('stamp').innerHTML = String(j.time);
      }
 }
+
+
+function stop()
+{
+	// 结束训练
+	req = new XMLHttpRequest();
+	req.open('GET', '/train/api/stop_train', false);
+	req.send(null);
+}
+
 
     </script>
 </head>
 <body onload="start_timer()">
     <center>
         <h1><div id='status'>训练中...</div></h1>
-        拥有者：<div id='who'/><br>
-        训练时间：<div id='time'/><br/>
-        迭代次数：<div id='iter_num'/><br/>
-        训练样本数：<div id='train_cnt'/><br/>
-        测试样本数：<div id='test_cnt'/><br/>
-        预测精度：<div id='accuracy'/><br/>
-        预计训练完成需要时间为：<div id='elapsed'/><br/>
+        拥有者：<div id='who'></div><br>
+        训练时间：<div id='stamp'></div><br/>
+        迭代次数：<div id='iter_num'></div><br/>
+        训练样本数：<div id='train_cnt'></div><br/>
+        测试样本数：<div id='test_cnt'></div><br/>
+        预测精度：<div id='accuracy'></div><br/>
+        预计训练完成需要时间为：<div id='elapsed'></div><br/>
+
+		<hr/>
+
+		<input type='button' value='终止训练' onclick='stop()'/>
     </center>
+
+
 </body>
 </html>
 
