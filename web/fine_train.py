@@ -47,6 +47,7 @@ def get_txt(datas, fname):
 
 
 if __name__ == '__main__':
+    os.environ['ONLINE_TRAIN'] = 'true'
     imagelist = get_database_record(sys.argv[1])
     random.shuffle(imagelist)
 
@@ -71,6 +72,8 @@ if __name__ == '__main__':
     }
 
     change_solver2(cfg)
+
+    print "FT: 0 0 0 0 0"
 
     commands = ['caffe.bin', 'train', '-solver', \
                'training/solver.prototxt', \
