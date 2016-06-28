@@ -125,14 +125,12 @@ class TrainApiHandler(BaseRequest):
         '''
         rx = {'status': 'norunning' }
         if self.application.training is None:
-            print 'get_progress: no training???'
             self.finish(rx)
             return
 
         ot = self.application.training
         info = ot.get_last_info()
         if info is None:
-            print 'get_progress: no result???'
             self.finish(rx)
             return
 

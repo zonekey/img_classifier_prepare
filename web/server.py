@@ -31,9 +31,6 @@ import caffe
 from usertask import UserTask
 from dbhlp import DB
 from baserequest import BaseRequest
-from training import TrainApiHandler
-from training import TrainShowingHandler
-from online_train import OnlineTrain
 
 lock = threading.Lock()
 
@@ -87,9 +84,6 @@ class Application(tornado.web.Application):
             (r'/retrain/api/confirm', RetrainImageCfHandler),   # 确认分类结果，PUT
             (r'/retrain/api/cancel', RetrainImageCancelHandler),  # 撤销
             (r'/retrain/api/skip', RetrainImageSkipHandler), # 跳过
-
-            (r'/train/api/(.+)', TrainApiHandler),  # 训练...
-            (r'/train/showing', TrainShowingHandler), # 训练显示页面 ..
 
             (r'/imgs/(.*)', NoCacheHandler, {'path': self.__mis_root } ), # 图片文件..
 
