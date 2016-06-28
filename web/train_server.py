@@ -22,6 +22,7 @@ class Application(tornado.web.Application):
 def main():
     httpserver = tornado.httpserver.HTTPServer(Application())
     httpserver.listen(8898)
+    print 'running traing server on port:', 8898
     tornado.ioloop.IOLoop.instance().start()
 
 
