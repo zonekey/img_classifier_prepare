@@ -73,6 +73,8 @@ if __name__ == '__main__':
 
     change_solver2(cfg)
 
+    print "FT: 0 0 0 0 0"
+
     commands = ['caffe.bin', 'train', '-solver', \
                'training/solver.prototxt', \
                '-weights', '../models/pretrained.caffemodel', '-gpu', 'all'] 
