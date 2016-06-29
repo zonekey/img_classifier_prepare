@@ -67,6 +67,7 @@ function update_info(j)
          document.getElementById('status').innerHTML = '未启动训练...<input type="button" value="启动" onclick="start()"/>';
      }
      else {
+		 document.getElementById('status').innerHTML = '正在训练 ...<input type="button" value="终止训练" onclick="stop()"/>'
          document.getElementById('who').innerHTML = j.who;
          document.getElementById('iter_num').innerHTML = String(j.iter_num);
          document.getElementById('train_cnt').innerHTML = String(j.train_cnt);
@@ -102,14 +103,9 @@ function stop()
         训练样本数：<div id='train_cnt'></div><br/>
         测试样本数：<div id='test_cnt'></div><br/>
         预测精度：<div id='accuracy'></div><br/>
-        预计训练完成需要时间为：<div id='elapsed'></div><br/>
+        预计训练完成时间：<div id='elapsed'></div><br/>
 
-		<hr/>
-
-		<input type='button' value='终止训练' onclick='stop()'/>
-    </center>
-
-
+	</center>
 </body>
 </html>
 
