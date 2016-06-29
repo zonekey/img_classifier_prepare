@@ -3,8 +3,6 @@
 <head>
     <title>训练中...</title>
     <script type='text/javascript'>
-
-
 interval = null;    // 
 
 function start_timer()
@@ -42,6 +40,13 @@ function fetch()
     req.send(null);
 }
 
+function start()
+{
+    // 启动训练
+    req = new XMLHttpRequest();
+    req.open('GET', '/train/api/start_train', false);
+    req.send();
+}
 
 function update_info(j)
 {
@@ -59,7 +64,7 @@ function update_info(j)
             }
      */
      if (j.status == 'norunning') {
-         document.getElementById('status').innerHTML = '未启动训练...';
+         document.getElementById('status').innerHTML = '未启动训练...<input type="button" value="启动" onclick="start()"/>';
      }
      else {
          document.getElementById('who').innerHTML = j.who;
