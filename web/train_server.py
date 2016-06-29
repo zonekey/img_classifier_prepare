@@ -5,8 +5,16 @@ import tornado.web, tornado.ioloop, tornado.httpserver
 import json
 from training import TrainApiHandler, TrainShowingHandler
 
-cfg = json.load('./cfg/config.json')
+def loadcfg(fname):
+    try:
+        with open(fname) as f:
+            s = f.read()
+            return json.loads(s)
+    except:
+        return {}
 
+
+cfg = loadcfg('./cfg/config1.json')
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [

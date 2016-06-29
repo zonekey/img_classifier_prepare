@@ -57,6 +57,7 @@ class DB:
         self.__conn.commit()
 
 
+
     def next_fname(self, who):
         ''' 优先返回 who 对应的 label = -1 的 fname，否则返回其他 who 的 label = -1 的记录，否则 None
         '''

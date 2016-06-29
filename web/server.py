@@ -33,7 +33,16 @@ from dbhlp import DB
 from baserequest import BaseRequest
 
 lock = threading.Lock()
-cfg = json.load("cfg/config.json")
+
+def loadcfg(fname):
+    try:
+        with open(fname, 'r') as f:
+            s = f.read()
+            return json.loads(s)
+    except:
+        return None
+
+cfg = loadcfg("cfg/config.json")
 
 def cb(opaque, rc):
     opaque.cb(rc)
