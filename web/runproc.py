@@ -67,6 +67,9 @@ class Running(threading.Thread):
             self.__info.append({'stamp':stamp, 'item':item})
         self.__updated = True
 
+    def get_info(self):
+        return self.__info
+
 
     def get_last_info(self):
         if len(self.__info) == 0:

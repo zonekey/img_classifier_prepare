@@ -28,6 +28,9 @@ class TrainShowingHandler(BaseRequest):
 
 
 class TrainApiHandler(BaseRequest):
+    def __init__(self):
+        self.__kvs = None
+
     def get(self, cmd):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         if not self.current_user:
@@ -40,6 +43,8 @@ class TrainApiHandler(BaseRequest):
             return self.stop_train()
         if cmd == 'get_progress':
             return self.get_progress()
+        if cmd == 'update':
+            return self.upate()
 
         self.finish('unknown cmd:' + cmd)
 
@@ -99,11 +104,22 @@ class TrainApiHandler(BaseRequest):
 
         ot = self.application.training
         ot.stop()
+        self.__kvs = ot.get_info()
         self.application.training = None
         self.application.training_user = None
         rx['info'] = 'done'
         self.finish(rx)
 
+    def update(self):
+         
+
+    def __get_good_model_num(self):
+        tmp  = self.__kvs[0] 
+        for kv in kvs:
+            if kv['accuracy'] > tmp['accuracy']:
+                tmp = kv[accuracy]
+        quot = tmp['iter_num'] / 1000
+        return quot * 1000 
 
     def get_progress(self):
         ''' 返回训练进度信息，使用长轮询 ??? 
