@@ -44,7 +44,7 @@ class TrainApiHandler(BaseRequest):
         if cmd == 'get_progress':
             return self.get_progress()
         if cmd == 'update':
-            return self.upate()
+            return self.update()
 
         self.finish('unknown cmd:' + cmd)
 
@@ -110,9 +110,6 @@ class TrainApiHandler(BaseRequest):
         rx['info'] = 'done'
         self.finish(rx)
 
-    def update(self):
-         
-
     def __get_good_model_num(self):
         tmp  = self.__kvs[0] 
         for kv in kvs:
@@ -162,12 +159,28 @@ class TrainApiHandler(BaseRequest):
         self.finish(rx)
 
 
+    def update(self):
+        ''' /train/api/update?ip=xxx '''
+        ip = self.get_query_argument('ip')
+        self.do_update(ip)
+        rx = { 'status': 'ok' }
+        self.finish(rx)
+
+
     def get_elapsed(self, info):
         ''' 根据 iter_num 和 time 估算完成 20000 次迭代需要的时间'''
         if info['iter_num'] > 0:
             return 20000.0 * (info['time'] / info['iter_num'])
         else:
             return -1.0
+
+
+    def do_update(self, ip):
+        ''' TODO: 实现上传 ... '''
+        iter_num = str(self.__get_good_model_num())
+        subprocess.call(['./zip_send.sh', iter_num])
+        print 'do_update, ip:', ip
+        pass
 
 
 
