@@ -25,6 +25,18 @@ class Application(tornado.web.Application):
 
         self.training = None # 对应 online_train.py
         self.who = None      # 启动训练的登录名字
+        self.__high_acc = -1.0
+        self.__high_num = 0
+
+
+    def save_curr_iternum_accuracy(self, num, acc):
+        if acc > self.__high_acc:
+            self.__high_acc = acc
+            self.__high_num = num
+
+    def high_num_acc(self):
+        return (self.__high_num % 1000, self.__high_acc)
+
 
 
 def main():

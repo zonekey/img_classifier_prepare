@@ -105,7 +105,6 @@ class Application(tornado.web.Application):
         ]
         tornado.web.Application.__init__(self, handlers, cookie_secret="abcd")
 
-
     def get_user(self, who):
         ''' 用于存储 user 相关的 '''
         if who in self.__users:

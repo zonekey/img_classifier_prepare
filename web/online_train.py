@@ -17,10 +17,12 @@ import urllib2
 ''' 封装对 fine_tune 的调用，通过读取 stdout 得到训练的进度 ....
 '''
 class OnlineTrain(Running):
-    def __init__(self):
+    def __init__(self, app):
         self.state = 'norunning'
+        self.app = app
         Running.__init__(self)
 
+        
 
     def process_handler(self):
         self.state = 'training'
@@ -50,10 +52,11 @@ class OnlineTrain(Running):
                         'test_cnt': int(ss[4]),
                         'accuracy': float(ss[5]),
                     }
+                    print self.app
+                    self.app.save_curr_iternum_accuracy(d['iter_num'], d['accuracy'])
                     print 'OnlineTrain: save', d
                     self.save_info(d)
         print 'OnlineTrain thread terminated!!!'
-        urllib2.urlopen('http://172.16.1.60:8812/fine_tune/info?complete')
 
 
 
