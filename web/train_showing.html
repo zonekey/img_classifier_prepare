@@ -3,7 +3,9 @@
 <head>
     <title>训练中...</title>
     <script type='text/javascript'>
+
 interval = null;    // 
+high_accuracy = -1.0;
 
 function start_timer()
 {
@@ -43,6 +45,7 @@ function fetch()
 function start()
 {
     // 启动训练
+	document.getElementById('update').innerHTML = '';
     req = new XMLHttpRequest();
     req.open('GET', '/train/api/start_train', false);
     req.send();
@@ -67,12 +70,18 @@ function update_info(j)
          document.getElementById('status').innerHTML = '未启动训练...<input type="button" value="启动" onclick="start()"/>';
      }
      else {
+		 accuracy = j.accuracy;
+		 if (accuracy > high_accuracy) {
+			 high_accuracy = accuracy;
+		 }
+
 		 document.getElementById('status').innerHTML = '正在训练 ...<input type="button" value="终止训练" onclick="stop()"/>'
          document.getElementById('who').innerHTML = j.who;
          document.getElementById('iter_num').innerHTML = String(j.iter_num);
          document.getElementById('train_cnt').innerHTML = String(j.train_cnt);
          document.getElementById('test_cnt').innerHTML = String(j.test_cnt);
-         document.getElementById('accuracy').innerHTML = String(j.accuracy);
+         document.getElementById('accuracy').innerHTML = String(accuracy);
+		 document.getElementById('high_accuracy').innerHTML = String(high_accuracy);
          var date = new Date(null);
          date.setSeconds(j.elapsed);
          document.getElementById('elapsed').innerHTML = date.toISOString().substr(11, 8);
@@ -89,6 +98,25 @@ function stop()
 	req = new XMLHttpRequest();
 	req.open('GET', '/train/api/stop_train', false);
 	req.send(null);
+
+	document.getElementById('update').innerHTML = '输入tk1的ip地址: <input type="text" id="update_ip" /><input type="button" id="update_but" value="更新" onclick="update()"/>'
+}
+
+
+function update()
+{
+	// 通知更新，更新进度需要到 update_ip 的机器上看 ...
+	ip = document.getElementById('update_ip').value;
+	document.getElementById('update_but').disabled = 'disabled';  // 防止连续发出 ..
+	
+	req = new XMLHttpRequest();
+	req.open('GET', '/train/api/update?ip=' + ip, false);
+	req.send(null);
+
+	more = '<br/> <a href="http://' + ip + ':18000/train/api/update?func=progress">查看更新进度</a>';
+	document.getElementById('update').innerHTML += more;
+	document.getElementById('update_ip').value = ip;
+
 }
 
 
@@ -102,8 +130,10 @@ function stop()
         迭代次数：<div id='iter_num'></div><br/>
         训练样本数：<div id='train_cnt'></div><br/>
         测试样本数：<div id='test_cnt'></div><br/>
-        预测精度：<div id='accuracy'></div><br/>
+        当前精度：<div id='accuracy'></div>，历史最高精度：<div id='high_accuracy'></div><br/>
         预计训练完成时间：<div id='elapsed'></div><br/>
+
+		<div id='update'><div>
 
 	</center>
 </body>

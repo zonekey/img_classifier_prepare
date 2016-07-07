@@ -11,6 +11,7 @@
 
 from runproc import Running
 import sys
+import urllib2
 
 
 ''' 封装对 fine_tune 的调用，通过读取 stdout 得到训练的进度 ....
@@ -35,8 +36,7 @@ class OnlineTrain(Running):
             line = line.strip()
             if len(line) < 4:
                 continue
-
-
+    
             # FIXME: 有效记录为 'FT: .....'
             if line[0:4] == 'FT: ':
                 '''
@@ -53,6 +53,8 @@ class OnlineTrain(Running):
                     print 'OnlineTrain: save', d
                     self.save_info(d)
         print 'OnlineTrain thread terminated!!!'
+        urllib2.urlopen('http://172.16.1.60:8812/fine_tune/info?complete')
+
 
 
 
