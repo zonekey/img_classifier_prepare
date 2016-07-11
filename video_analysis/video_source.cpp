@@ -19,7 +19,11 @@ FFmpegVideoSource::FFmpegVideoSource()
 	ctx_ = 0;
 	memset(valid_decodere_, 0, sizeof(valid_decodere_));
 
+#if LIBAVCODEC_VERSION_MAJOR >= 55
 	frame_ = av_frame_alloc();
+#else
+	frame_ = avcodec_alloc_frame();
+#endif
 	sws_ = 0;
 	pic_.data[0] = 0;
 	width_ = 0, height_ = 0;
@@ -34,7 +38,11 @@ double FFmpegVideoSource::duration() const
 
 FFmpegVideoSource::~FFmpegVideoSource()
 {
+#if LIBAVCODEC_VERSION_MAJOR >= 55
 	av_frame_free(&frame_);
+#else
+	avcodec_free_frame(&frame_);
+#endif
 	if (sws_) {
 		sws_freeContext(sws_);
 		avpicture_free(&pic_);

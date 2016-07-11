@@ -22,6 +22,10 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS([memset])
 PKG_CHECK_MODULES(OPENCV,opencv)
+PKG_CHECK_MODULES(avcodec, libavcodec)
+PKG_CHECK_MODULES(avformat, libavformat)
+PKG_CHECK_MODULES(avutil, libavutil)
+PKG_CHECK_MODULES(swscale, libswscale)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
