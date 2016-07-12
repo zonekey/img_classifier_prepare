@@ -29,7 +29,6 @@ class TrainShowingHandler(BaseRequest):
 
 
 class TrainApiHandler(BaseRequest):
-
     def get(self, cmd):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         if not self.current_user:
@@ -69,7 +68,7 @@ class TrainApiHandler(BaseRequest):
         dbname = '/home/sunkw/store/imgs/labels.db'
         cmd = ['python', 'fine_train.py', dbname]
             
-        ot = OnlineTrain()
+        ot = OnlineTrain(self.application)
         ot.start(cmd)
         self.application.training = ot
         self.application.training_user = self.current_user
