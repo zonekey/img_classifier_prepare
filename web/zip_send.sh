@@ -11,4 +11,4 @@ zip -o pub/m.zip ../models/deploy.prototxt  ../models/labels.txt  ../models/mean
 
 ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
 echo $ip
-curl -X PUT -d '{"url": "http://${ip}:8889/pub/m.zip"}' "http://${2}:18000/train/api/update?func=start_download"
+curl -X PUT -d "{\"url\": \"http://${ip}:8889/pub/m.zip\"}" "http://${2}:18000/train/api/update?func=start_download"
