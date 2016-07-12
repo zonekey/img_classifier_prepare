@@ -1,8 +1,5 @@
 #!/bin/sh
-#rm -f ../models/pretrained.caffemodel
-mv ../models/pretrained.caffemodel training/tmp-_iter_${1}.caffemodel
 cp  training/tmp-_iter_${1}.caffemodel ../models/pretrained.caffemodel
-
 ip= ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
 
 zip -o pub/m.zip ../models/deploy.prototxt  ../models/labels.txt  ../models/mean.binaryproto  ../models/pretrained.caffemodel   
