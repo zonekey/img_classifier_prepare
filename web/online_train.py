@@ -53,8 +53,6 @@ class OnlineTrain(Running):
                     print 'OnlineTrain: save', d
                     self.save_info(d)
         print 'OnlineTrain thread terminated!!!'
-        urllib2.urlopen('http://172.16.1.60:8812/fine_tune/info?complete')
-
 
 
 

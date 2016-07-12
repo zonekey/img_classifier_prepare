@@ -14,7 +14,7 @@ def loadcfg(fname):
         return {}
 
 
-cfg = loadcfg('./cfg/config1.json')
+cfg = loadcfg('./cfg/config.json')
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
@@ -25,6 +25,7 @@ class Application(tornado.web.Application):
 
         self.training = None # 对应 online_train.py
         self.who = None      # 启动训练的登录名字
+        self.good_iter = -1
 
 
 def main():

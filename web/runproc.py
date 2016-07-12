@@ -78,8 +78,6 @@ class Running(threading.Thread):
             return self.__info[-1]['item']
 
 
-    def get_info(self, begin = -1.0, to = sys.float_info.max):
-        pass
 
 
 

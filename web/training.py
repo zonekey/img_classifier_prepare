@@ -13,6 +13,7 @@
 
 from baserequest import BaseRequest
 from online_train import OnlineTrain
+import subprocess
 
 
 class TrainShowingHandler(BaseRequest):
@@ -28,8 +29,6 @@ class TrainShowingHandler(BaseRequest):
 
 
 class TrainApiHandler(BaseRequest):
-    def __init__(self):
-        self.__kvs = None
 
     def get(self, cmd):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -103,20 +102,27 @@ class TrainApiHandler(BaseRequest):
             return
 
         ot = self.application.training
+        info = ot.get_info()
         ot.stop()
-        self.__kvs = ot.get_info()
+
+        print info
+
+        if not info or len(info) == 0:
+            return
+
+        tmp = info[0]
+        for kv in info:
+            if kv['item']['accuracy'] > tmp['item']['accuracy']:
+                tmp = kv
+        quot = tmp['item']['iter_num'] / 500 * 500
+
+        self.application.good_iter = quot
+        
         self.application.training = None
         self.application.training_user = None
         rx['info'] = 'done'
         self.finish(rx)
 
-    def __get_good_model_num(self):
-        tmp  = self.__kvs[0] 
-        for kv in kvs:
-            if kv['accuracy'] > tmp['accuracy']:
-                tmp = kv[accuracy]
-        quot = tmp['iter_num'] / 1000
-        return quot * 1000 
 
     def get_progress(self):
         ''' 返回训练进度信息，使用长轮询 ??? 
@@ -136,6 +142,7 @@ class TrainApiHandler(BaseRequest):
             }
 
         '''
+        print 'get_progress...'
         rx = {'status': 'norunning' }
         if self.application.training is None:
             self.finish(rx)
@@ -177,7 +184,8 @@ class TrainApiHandler(BaseRequest):
 
     def do_update(self, ip):
         ''' TODO: 实现上传 ... '''
-        iter_num = str(self.__get_good_model_num())
+        iter_num = str(self.application.good_iter)
+        print 'INFO: good iter is', iter_num
         subprocess.call(['./zip_send.sh', iter_num])
         print 'do_update, ip:', ip
         pass
