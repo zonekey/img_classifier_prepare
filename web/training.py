@@ -165,9 +165,9 @@ class TrainApiHandler(BaseRequest):
 
 
     def get_elapsed(self, info):
-        ''' 根据 iter_num 和 time 估算完成 20000 次迭代需要的时间'''
+        ''' 根据 iter_num 和 time 估算完成 10000 次迭代需要的时间'''
         if info['iter_num'] > 0:
-            return 20000.0 * (info['time'] / info['iter_num'])
+            return 10000.0 * (info['time'] / info['iter_num'])
         else:
             return -1.0
 
@@ -176,7 +176,7 @@ class TrainApiHandler(BaseRequest):
         ''' TODO: 实现上传 ... '''
         iter_num = str(self.application.good_iter)
         print 'INFO: good iter is', iter_num
-        subprocess.call(['./zip_send.sh', iter_num])
+        subprocess.call(['./zip_send.sh', iter_num, ip])
         print 'do_update, ip:', ip
         pass
 

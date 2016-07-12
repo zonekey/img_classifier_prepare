@@ -82,7 +82,7 @@ if __name__ == '__main__':
         'test_iter': str(len(val)),
     }
 
-    change_solver2(cfg)
+#    change_solver2(cfg)
 
     print "FT: 0 0 0 0 0"
     sys.stdout.flush()
