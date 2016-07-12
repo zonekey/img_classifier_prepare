@@ -101,24 +101,16 @@ class TrainApiHandler(BaseRequest):
             return
 
         ot = self.application.training
-        info = ot.get_info()
         ot.stop()
 
-        print info
+        if self.application.high_iter > 0:
+            self.application.good_iter = self.application.high_iter / 500 * 500
 
-        if not info or len(info) == 0:
-            return
-
-        tmp = info[0]
-        for kv in info:
-            if kv['item']['accuracy'] > tmp['item']['accuracy']:
-                tmp = kv
-        quot = tmp['item']['iter_num'] / 500 * 500
-
-        self.application.good_iter = quot
-        
+       
         self.application.training = None
         self.application.training_user = None
+        self.application.save_curr_iternum_accuracy(-1, 0.001)
+
         rx['info'] = 'done'
         self.finish(rx)
 
@@ -141,7 +133,6 @@ class TrainApiHandler(BaseRequest):
             }
 
         '''
-        print 'get_progress...'
         rx = {'status': 'norunning' }
         if self.application.training is None:
             self.finish(rx)

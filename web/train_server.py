@@ -26,6 +26,14 @@ class Application(tornado.web.Application):
         self.training = None # 对应 online_train.py
         self.who = None      # 启动训练的登录名字
         self.good_iter = -1
+        self.high_iter = -1
+        self.high_acc = 0.001
+
+
+    def save_curr_iternum_accuracy(self, it, acc):
+        if acc > self.high_acc:
+            self.high_iter = acc
+            self.high_iter = it
 
 
 def main():

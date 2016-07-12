@@ -52,9 +52,7 @@ class OnlineTrain(Running):
                         'test_cnt': int(ss[4]),
                         'accuracy': float(ss[5]),
                     }
-                    print self.app
                     self.app.save_curr_iternum_accuracy(d['iter_num'], d['accuracy'])
-                    print 'OnlineTrain: save', d
                     self.save_info(d)
         print 'OnlineTrain thread terminated!!!'
 

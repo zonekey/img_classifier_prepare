@@ -42,6 +42,33 @@ class DB:
         return c[0]
 
 
+    def get_all_labeld(self):
+        ''' 返回所有手动标定的文件名字，标签'''
+        data = []
+        cmd = 'select fname, label from img where label >= 0;'
+        cur = self.__conn.execute(cmd)
+        while True:
+            r = cur.fetchone()
+            if r is None:
+                break
+
+            data.append((r[0], r[1]))
+        return data
+
+
+    def get_all_predicted(self):
+        data = []
+        cmd = 'select fname, pred_label from img where label >= 0;'
+        cur = self.__conn.execute(cmd)
+        while True:
+            r = cur.fetchone()
+            if r is None:
+                break
+
+            data.append((r[0], r[1]))
+        return data
+
+
     def prepare_db(self):
         ''' 在 self.__mis_root 下创建 labels.db，格式为：
                 fname: 完整的文件路径名
@@ -106,6 +133,17 @@ class DB:
         cmd = 'select fname,label from img where label>=0;'
         cursor = self.__conn.execute(cmd)
         return cursor.fetchall()
+
+
+
+if __name__ == '__main__':
+    import sys
+    if sys.argv[1] == 'txt':
+        db = DB('/home/sunkw/store/imgs/labels.db')
+        data = db.get_all_labeld()
+        with open('labeled.txt', 'w') as f:
+            for item in data:
+                f.write('{} {}\n'.format(item[0], item[1]))
 
 
 

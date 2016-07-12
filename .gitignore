@@ -1,4 +1,7 @@
 .browse.VC.*
 .DS_Store
 *.png
-
+*.caffemodel
+*.binaryproto
+*.txt
+*.solverstate
